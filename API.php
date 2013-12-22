@@ -20,6 +20,7 @@ use Zend_Cache;
 
 define('DS', DIRECTORY_SEPARATOR);
 
+// I don't know if Zend_Cache is available so I include it. Need some tests.
 require_once PIWIK_INCLUDE_PATH.DS.'libs'.DS.'Zend'.DS.'Cache.php';
 
 class API extends \Piwik\Plugin\API {
@@ -152,6 +153,13 @@ class API extends \Piwik\Plugin\API {
 		}
 	}
 
+	/**
+	 * Remove counter from DB
+	 *
+	 * @param   bool  $id		Counter ID
+	 *
+	 * @return	json	string
+	 */
 	public function remove($id) {
 		$success = 0;
 
@@ -163,6 +171,13 @@ class API extends \Piwik\Plugin\API {
 		return json_encode(array('success'=>$success));
 	}
 
+	/**
+	 * Get data for one counter or list of counters
+	 *
+	 * @param   bool  $id		False - get data for all counters
+	 *
+	 * @return	array
+	 */
 	public function getCountersData($id=false) {
 		$result = array();
 
@@ -200,12 +215,19 @@ class API extends \Piwik\Plugin\API {
 		return $result;
 	}
 
+	/**
+	 * Checking the user access rights
+	 *
+	 * @param   bool  $is_index		True if counter data request from frontpage
+	 *
+	 * @return	true or Exception
+	 */
 	public function checkAccess($is_index=false) {
 		$sites_manager = SitesManager::getInstance();
 		$access = Access::getInstance();
 		$id_arr = $sites_manager->getSitesIdWithAdminAccess();
 
-		// Check the user access. If the user not an admin for at least one site when throw an error
+		// Checking the user access rights. If the user not an admin for at least one site when throw an error
 		if (count($id_arr) <= 0) {
 			throw new Exception(Piwik::Translate('General_ExceptionPrivilegeAtLeastOneWebsite', array('admin')));
 		} else {
@@ -377,6 +399,11 @@ class API extends \Piwik\Plugin\API {
 		}
 	}
 
+	/**
+	 * Show image from cache or create a new one
+	 *
+	 * @return image binary
+	 */
 	public function showImage() {
 		$id = Common::getRequestVar('id', 0, 'int');
 		$params = $this->getCountersData($id);
@@ -425,6 +452,11 @@ class API extends \Piwik\Plugin\API {
 		}
 	}
 
+	/**
+	 * Create image for preview while editing counter data. For backend only
+	 *
+	 * @return image binary
+	 */
 	public function previewImage() {
 		$params = array(
 			'id' => 		Common::getRequestVar('id', 0, 'int'),
