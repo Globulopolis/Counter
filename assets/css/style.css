@@ -1,0 +1,196 @@
+.c-code, .c-code-live {
+	color: #999;
+	margin: .2em .2em 0 1em;
+}
+
+.c-footer {
+	border-top: 1px solid #ccc;
+	color: #999;
+	padding: .5em 0;
+	width: 100%;
+}
+
+.c-footer a {
+	color: #666;
+}
+
+.c-footer .copy {
+	margin-bottom: .3em;
+}
+
+.c-footer .copy a {
+	color: #666;
+	text-decoration: none;
+}
+
+.c-footer .copy a:hover {
+	border-bottom: 1px dotted #333;
+}
+
+.c-footer a#c_check {
+	background: url("../../../../plugins/Zeitgeist/images/reload.png") no-repeat left center;
+	padding-left: 20px;
+}
+
+.ui-inline-help {
+	padding: 5px 10px;
+}
+
+.addRowCounter a {
+	font-size: 1em;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+.addRowCounter a img {
+	padding-right: 8px;
+}
+
+.admin h2 {
+	margin: 15px 0 20px 0;
+}
+
+.input-green {
+	background: url("../images/icons/publish_y.png") no-repeat right center;
+}
+.input-red {
+	background: url("../images/icons/publish_n.png") no-repeat right center;
+}
+
+a#clearCache {
+	background: url("../images/icons/delete.png") no-repeat left center;
+	margin-right: 6px;
+	padding-left: 18px;
+}
+
+#start_date + img {
+	cursor: pointer;
+	margin-left: 0.5em;
+	padding-bottom: 4px;
+}
+
+tr.l_pos {
+	display: none;
+}
+
+select#idsite {
+	width: 450px;
+}
+
+.miniColors-trigger {
+	height: 22px;
+	width: 22px;
+	background: url("../images/icons/trigger.png") center no-repeat;
+	vertical-align: middle;
+	margin: 0 .25em;
+	display: inline-block;
+	outline: none;
+}
+
+.miniColors-selector {
+	position: absolute;
+	width: 175px;
+	height: 150px;
+	background: #FFF;
+	border: solid 1px #BBB;
+	-moz-box-shadow: 0 0 6px rgba(0, 0, 0, .25);
+	-webkit-box-shadow: 0 0 6px rgba(0, 0, 0, .25);
+	box-shadow: 0 0 6px rgba(0, 0, 0, .25);
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+	padding: 5px;
+	z-index: 999999;
+}
+
+.miniColors-selector.black {
+	background: #000;
+	border-color: #000;
+}
+
+.miniColors-colors {
+	position: absolute;
+	top: 5px;
+	left: 5px;
+	width: 150px;
+	height: 150px;
+	background: url("../images/gradient.png") center no-repeat;
+	cursor: crosshair;
+}
+
+.miniColors-hues {
+	position: absolute;
+	top: 5px;
+	left: 160px;
+	width: 20px;
+	height: 150px;
+	background: url("../images/rainbow.png") center no-repeat;
+	cursor: crosshair;
+}
+
+.miniColors-colorPicker {
+	position: absolute;
+	width: 11px;
+	height: 11px;
+	background: url("../images/icons/circle.gif") center no-repeat;
+}
+
+.miniColors-huePicker {
+	position: absolute;
+	left: -3px;
+	width: 26px;
+	height: 3px;
+	background: url("../images/line.gif") center no-repeat;
+}
+
+.dialog, .dialog .ui-widget {
+	font-size: .8em !important;
+	text-align: left !important;
+}
+
+.separator_parent, .separator_children {
+	border-top: 1px solid #ebebeb;
+	border-bottom: 1px solid #ebebeb;
+	padding: 7px 7px 7px 2px !important;
+}
+
+.separator_parent {
+	background-color: #d2d2d2;
+}
+
+.separator_children {
+	background-color: #f5f5f5;
+}
+
+.small {
+	font-size: .8em;
+}
+
+.adminTable .ui-inline-help {
+	width: auto !important;
+}
+
+a.publish_y {
+	background: url(../images/icons/publish_y.png) no-repeat left center;
+	padding-left: 18px;
+}
+
+a.publish_n {
+	background: url(../images/icons/publish_n.png) no-repeat left center;
+	padding-left: 18px;
+}
+
+a.deleteSite {
+	background: url(../images/icons/delete.png) no-repeat left center;
+	padding-left: 18px;
+}
+
+#ui-datepicker-div {
+	border-right: 1px solid #ccc !important;
+	border-bottom: 1px solid #ccc !important;
+	border-left: 1px solid #ccc !important;
+}
+
+#ui-datepicker-div .ui-datepicker-buttonpane {
+	border-top: 1px solid #ccc !important;
+}

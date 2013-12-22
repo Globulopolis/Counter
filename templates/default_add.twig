@@ -1,0 +1,429 @@
+{% extends "admin.twig" %}
+{% block notification %}{% endblock %}
+
+{% block content %}
+
+<style type="text/css" media="all">
+	@import url("plugins/Counter/assets/css/style.css");
+</style>
+<script type="text/javascript" src="plugins/Counter/assets/js/miniColors.min.js"></script>
+<script type="text/javascript" src="plugins/Counter/assets/js/ui.aurora.min.js"></script>
+<script type="text/javascript">
+<!--
+	jQuery(document).ready(function($){
+		$('.color-picker').miniColors({
+			letterCase: 'uppercase',
+		});
+		$('.go_back').click(function(){
+			window.location.href = 'index.php?module=Counter&action=index&idSite={{ idSite }}&period={{ period }}&date={{ date }}';
+		});
+		$('input.paths').blur(function(){
+			var elem = $(this);
+			elem.removeClass('input-green input-red');
+
+			if (elem.val() != '') {
+				$.getJSON('index.php?module=Counter&action=checkpath', {'path':  elem.val()}, function(response){
+					if (response.success == 1) {
+						elem.addClass('input-green');
+					} else {
+						elem.removeClass('input-green').addClass('input-red');
+					}
+				});
+			} else {
+				elem.removeClass('input-green').addClass('input-red');
+				elem.next().empty().text('{{ 'Counter_Path_empty'|translate }}');
+			}
+		});
+		$('#start_date').datepicker({
+			showButtonPanel: true,
+			changeMonth: true,
+			changeYear: true,
+			showOn: 'both',
+			buttonImage: 'plugins/Morpheus/images/icon-calendar.gif',
+			buttonImageOnly: true,
+			dateFormat: 'yy-mm-dd',
+			onSelect: function(date){
+				$('#start_date_period option').eq(0).prop('selected', 'selected');
+			}
+		});
+		$('.save, .apply').prop('disabled', 'disabled');
+		$('#idsite').change(function(){
+			var _this = $(this);
+
+			if (this.value != 0) {
+				$('#start_date').val('');
+				_this.attr('disabled', true);
+				$.getJSON('index.php?module=Counter&action=siteidPrecheck&idsite='+this.value, function(response){
+					if (response.success == 0) {
+						$('span.check-state').aurora({
+							text: '{{ 'Counter_Counter_exists'|translate }}',
+							leave_only_first: true,
+							container: 'ui-state-error',
+							icon: 'ui-icon-alert',
+							onComplete: function(){
+								_this.attr('disabled', false);
+							}
+						});
+						$('.save, .apply').prop('disabled', 'disabled');
+					} else {
+						if ($('#start_date').val() == '') {
+							$('#start_date').val(response.ts_created);
+						}
+						$('.save, .apply').removeProp('disabled');
+						_this.attr('disabled', false);
+						$('body').aurora.destroy({ indexes:'all' });
+					}
+				});
+			} else {
+				$('.save, .apply').prop('disabled', 'disabled');
+			}
+		}).trigger('change');
+		$('#start_date_period').change(function(){
+			if ($('option', this).filter(':selected').val() != 'none') {
+				$('#start_date').val('');
+				if ($('option', this).filter(':selected').val() == 'day') {
+					$('#cache_time').val('86400');
+				}
+			}
+		}).trigger('change');
+
+		$('#cache_time').blur(function(){
+			if ($('#start_date_period option').filter(':selected').val() != 'none' && $(this).val() > 86400) {
+				$(this).val('86400');
+			}
+		});
+		$('.save').click(function(){
+			$('#action').val('save');
+			$('#adminForm').submit();
+		});
+		$('.apply').click(function(){
+			$('#action').val('apply');
+			$('#adminForm').submit();
+		});
+	});
+// -->
+</script>
+<div class="ui-widget-content">
+	<h2>{{ 'Counter_Page_main'|translate }} &bull; {{ 'Counter_Add'|translate }}</h2>
+	<form action="index.php" method="post" id="adminForm" autocomplete="off">
+		<table class="adminTable" style="width: 100%;">
+			<tbody id="tables">
+				<tr>
+					<td width="30%" valign="top"><label for="site">{{ 'Counter_Params_site'|translate }}</label></td>
+					<td>
+						<select name="siteid" id="idsite">
+							<option value="0">{{ 'Counter_Params_siteselect'|translate }}</option>
+							{% for sites in list_sites %}
+							<option value="{{ sites.idsite }}">{{ sites.idsite }} - {{ sites.name }}</option>
+							{% endfor %}
+						</select>
+						<span class="check-state"></span>
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_site_desc'|translate|raw }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="title">{{ 'Counter_Params_sitename'|translate }}</label></td>
+					<td>
+						<input type="text" name="title" value="Default sitename" id="title" size="69" maxlength="50" required />
+					</td>
+					<td width="30%">
+						<label for="title">
+							<div class="ui-inline-help">{{ 'Counter_Params_sitename_desc'|translate }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="pub">{{ 'Counter_Params_publish'|translate }}</label></td>
+					<td>
+						<input type="radio" name="published" id="published_on" value="1" checked="checked" /> <label for="published_on">{{ 'Counter_Params_yes'|translate }}</label>
+						<input type="radio" name="published" id="published_off" value="0" /> <label for="published_off">{{ 'Counter_Params_no'|translate }}</label>
+					</td>
+					<td width="30%">&nbsp;</td>
+				</tr>
+				<tr>
+					<td class="separator_parent" colspan="3"><strong>{{ 'Counter_Params_pos_sep'|translate }}</strong></td>
+				</tr>
+				<tr>
+					<td class="separator_children" colspan="3"><strong>{{ 'Counter_Params_pos_sep_sitename'|translate }}</strong></td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="show_sitename">{{ 'Counter_Params_show_sitename'|translate }}</label></td>
+					<td>
+						<input type="radio" name="show_sitename" id="show_sitename_on" value="1" checked="checked" /> <label for="show_sitename_on">{{ 'Counter_Params_yes'|translate }}</label>
+						<input type="radio" name="show_sitename" id="show_sitename_off" value="0" /> <label for="show_sitename_off">{{ 'Counter_Params_no'|translate }}</label>
+					</td>
+					<td width="30%">&nbsp;</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="sitename_pos_x">{{ 'Counter_Params_sitename_pos_label'|translate }}</label></td>
+					<td>
+						<input type="text" name="sitename_pos_x" value="3" id="sitename_pos_x" size="4" maxlength="3" />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}<br />
+						<input type="text" name="sitename_pos_y" value="13" id="sitename_pos_y" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="color_sitename">{{ 'Counter_Params_colors_sitename'|translate }}</label></td>
+					<td>
+						<input type="text" name="color_sitename" value="#03374A" id="color_sitename" size="7" maxlength="6" class="color-picker" required />
+					</td>
+					<td width="30%">
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="sitename_font_size">{{ 'Counter_Params_fontsize'|translate }}</label></td>
+					<td>
+						<input type="text" name="sitename_font_size" value="7" id="sitename_font_size" size="3" maxlength="2" required />
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td class="separator_children" colspan="3"><strong>{{ 'Counter_Params_pos_sep_visits'|translate }}</strong></td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="show_visits">{{ 'Counter_Params_show_visits'|translate }}</label></td>
+					<td>
+						<input type="radio" name="show_visits" id="show_visits_on" value="1" checked="checked" /> <label for="show_visits_on">{{ 'Counter_Params_yes'|translate }}</label>
+						<input type="radio" name="show_visits" id="show_visits_off" value="0" /> <label for="show_visits_off">{{ 'Counter_Params_no'|translate }}</label>
+					</td>
+					<td width="30%">&nbsp;</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="visitors_pos_x">{{ 'Counter_Params_visitors_pos_label'|translate }}</label></td>
+					<td>
+						<input type="text" name="visitors_pos_x" value="3" id="visitors_pos_x" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}<br />
+						<input type="text" name="visitors_pos_y" value="26" id="visitors_pos_y" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="color_visits">{{ 'Counter_Params_colors_visits'|translate }}</label></td>
+					<td>
+						<input type="text" name="color_visits" value="#F16045" id="color_visits" size="7" maxlength="6" class="color-picker" required />
+					</td>
+					<td width="30%">
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="visits_font_size">{{ 'Counter_Params_fontsize'|translate }}</label></td>
+					<td>
+						<input type="text" name="visits_font_size" value="7" id="visits_font_size" size="3" maxlength="2" required />
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td class="separator_children" colspan="3"><strong>{{ 'Counter_Params_pos_sep_hits'|translate }}</strong></td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="show_views">{{ 'Counter_Params_show_views'|translate }}</label></td>
+					<td>
+						<input type="radio" name="show_views" id="show_views_on" value="1" checked="checked" /> <label for="show_views_on">{{ 'Counter_Params_yes'|translate }}</label>
+						<input type="radio" name="show_views" id="show_views_off" value="0" /> <label for="show_views_off">{{ 'Counter_Params_no'|translate }}</label>
+					</td>
+					<td width="30%">&nbsp;</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="views_pos_x">{{ 'Counter_Params_views_pos_label'|translate }}</label></td>
+					<td>
+						<input type="text" name="views_pos_x" value="30" id="views_pos_x" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}<br />
+						<input type="text" name="views_pos_y" value="26" id="views_pos_y" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="color_views">{{ 'Counter_Params_colors_views'|translate }}</label></td>
+					<td>
+						<input type="text" name="color_views" value="#E07A52" id="color_views" size="7" maxlength="6" class="color-picker" required />
+					</td>
+					<td width="30%">
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="hits_font_size">{{ 'Counter_Params_fontsize'|translate }}</label></td>
+					<td>
+						<input type="text" name="hits_font_size" value="7" id="hits_font_size" size="3" maxlength="2" required />
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td class="separator_parent" colspan="3">&nbsp;</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label>{{ 'Counter_Params_img_size'|translate }}</label></td>
+					<td>
+						<input type="text" name="img_size_x" value="80" id="img_size_x" size="4" maxlength="3" required />
+						&nbsp;x&nbsp;
+						<input type="text" name="img_size_y" value="31" id="img_size_y" size="4" maxlength="3" required />
+						{{ 'Counter_Params_img_size_px'|translate }}
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_img_size_desc'|translate }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="img_path">{{ 'Counter_Params_img_path'|translate }}</label></td>
+					<td>
+						<input type="text" name="img_path" value="plugins/Counter/assets/images/counter.png" id="img_path" class="paths" size="70" />
+						<span>&nbsp;</span>
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_img_path_desc'|translate }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="font_path">{{ 'Counter_Params_fontpath'|translate }}</label></td>
+					<td>
+						<input type="text" name="font_path" value="plugins/Counter/assets/fonts/OpenSans-Regular.ttf" id="font_path" class="paths" size="70" />
+						<span>&nbsp;</span>
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_fontpath_desc'|translate }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label>{{ 'Counter_Params_cache'|translate }}</label></td>
+					<td>
+						<input type="radio" name="cache" id="cache_on" value="1" checked="checked" /> <label for="cache_on">{{ 'Counter_Params_yes'|translate }}</label>
+						<input type="radio" name="cache" id="cache_off" value="0" /> <label for="cache_off">{{ 'Counter_Params_no'|translate }}</label>
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_cache_off'|translate }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="cache_time">{{ 'Counter_Params_cache_time'|translate }}</label></td>
+					<td>
+						<input type="text" name="cache_time" value="900" id="cache_time" size="7" maxlength="6" required />{{ 'Counter_Params_seconds'|translate }}
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_cache_time_desc'|translate }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="start_date">{{ 'Counter_Params_datestart'|translate }}</label></td>
+					<td>
+						<a name="date_global"></a>
+						<input type="text" name="start_date" value="" id="start_date" size="11" maxlength="10" />
+						<label for="">{{ 'Counter_Params_datestart_period'|translate }}</label>
+						<select name="start_date_period" id="start_date_period">
+							<option value="none" selected="selected">-</option>
+							<option value="day">{{ 'CoreHome_PeriodDay'|translate }}</option>
+							<option value="week">{{ 'CoreHome_PeriodWeek'|translate }}</option>
+							<option value="month">{{ 'CoreHome_PeriodMonth'|translate }}</option>
+							<option value="year">{{ 'CoreHome_PeriodYear'|translate }}</option>
+						</select>
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_datestart_desc'|translate|raw }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="token">{{ 'Counter_Params_token_auth'|translate }}</label></td>
+					<td>
+						<input type="text" name="token" value="{{ token }}" id="token" size="70" maxlength="64" required />
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_token_auth_desc'|translate }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td class="separator_parent" colspan="3"><strong>{{ 'Counter_Params_live_sep'|translate }}</strong></td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="last_minutes">{{ 'Counter_Params_live_period'|translate }}</label></td>
+					<td>
+						<input type="text" name="last_minutes" value="30" id="last_minutes" size="4" maxlength="3" />
+					</td>
+					<td width="30%">
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="check_interval">{{ 'Counter_Params_live_interval'|translate }}</label></td>
+					<td>
+						<input type="text" name="check_interval" value="10000" id="check_interval" size="7" maxlength="6" />
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_live_interval_desc'|translate }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label>{{ 'Counter_Params_live_static'|translate }}</label></td>
+					<td>
+						<input type="radio" name="static" id="static_on" value="1" checked="checked" /> <label for="static_on">{{ 'Counter_Params_yes'|translate }}</label>
+						<input type="radio" name="static" id="static_off" value="0" /> <label for="static_off">{{ 'Counter_Params_no'|translate }}</label>
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_live_static_desc'|translate }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="livestat_elem_id">{{ 'Counter_Params_live_elemid'|translate }}</label></td>
+					<td>
+						<input type="text" name="livestat_elem_id" value="" id="livestat_elem_id" size="70" />
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_live_elemid_desc'|translate|raw }}</div>
+						</label>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<input type="hidden" name="module" value="Counter" />
+		<input type="hidden" name="action" value="" id="action" />
+		<p>
+			<input type="button" value="{{ 'General_Save'|translate }}" class="submit save" />
+			<input type="button" value="{{ 'Counter_Apply'|translate }}" class="submit apply" />
+			<input type="button" value="{{ 'General_Close'|translate }}" class="submit go_back" />
+		</p>
+	</form>
+</div>
+
+{% include '@Counter/default_footer.twig' %}
+{% endblock %}

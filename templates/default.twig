@@ -1,0 +1,88 @@
+{% extends "admin.twig" %}
+{% block notification %}{% endblock %}
+{% block content %}
+
+<style type="text/css" media="all">
+	@import url("plugins/Counter/assets/css/style.css");
+</style>
+<script type="text/javascript" src="plugins/Counter/assets/js/ui.aurora.min.js"></script>
+<script type="text/javascript">
+<!--
+	jQuery(document).ready(function($){
+		$('.deleteSite').click(function(e){
+			e.preventDefault();
+			var _this = $(this),
+				dlg = $('<div style="display: none;" class="dialog" title="{{ 'Counter_Remove_title'|translate }}"><p>{{ 'Counter_Remove'|translate }}</p></div>').appendTo('body');
+
+			dlg.dialog({
+				buttons: {
+					'{{ 'General_Delete'|translate }}': function(){
+						$.get(_this.attr('href'), function(response){
+							if (response.success == 1) {
+								_this.closest('tr').remove();
+								dlg.dialog('close');
+							} else {
+								$('p', dlg).remove();
+								dlg.aurora({
+									text: '{{ 'Counter_Remove_error'|translate }}',
+									leave_only_first: true,
+									container: 'ui-state-error',
+									icon: 'ui-icon-alert'
+								});
+							}
+						});
+					},
+					'{{ 'General_Cancel'|translate }}': function(){
+						dlg.dialog('close');
+					}
+				},
+				draggable: false,
+				resizable: false,
+				modal: true,
+				height: 150,
+				width: 420
+			});
+		});
+	});
+// -->
+</script>
+<div class="ui-widget-content counters-list">
+	<h2>{{ 'Counter_Page_main'|translate }}</h2>
+	<div class="addRowCounter"><a href="index.php?module=Counter&action=add&idSite={{ idSite }}&period={{ period }}&date={{ date }}"> <img alt="" src="plugins/Morpheus/images/add.png" />{{ 'Counter_Add'|translate }}</a></div><br />
+	{{ 'Counter_Page_main_desc'|translate }}
+
+	<table width="100%" border="0" class="entityTable dataTable">
+		<thead>
+			<tr>
+				<th>{{ 'Counter_Sitename'|translate }}</th>
+				<th style="border-right: 1px solid #d4d0c4; text-align: center;">{{ 'Counter_Status'|translate }}</th>
+				<th>{{ 'Counter_Id'|translate }}</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for data in counters %}
+			<tr>
+				<td>
+					<strong><a href="index.php?module=Counter&action=edit&id={{ data.id }}&idSite={{ idSite }}&period={{ period }}&date={{ date }}" title="{{ 'Counter_Edit_title'|translate }}">{% if data.title == '' %}{{ 'Counter_Sitename_nositename'|translate }}{% else %}{{ data.title }}{% endif %}</a></strong>
+					<div class="c-code">{{ 'Counter_Code'|translate }}&lt;img src="http://{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=show&{% if data.params.start_date == '' and data.params.start_date_period == 'none' %}date=2010-01-01&{% endif %}id={{ data.id }}" border="0" /&gt;</div>
+					<div class="c-code-live">{{ 'Counter_Code_live'|translate }}&lt;script type="text/javascript" src="http://{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=live&id={{ data.id }}&type=js"&gt;&lt;/script&gt;</div>
+				</td>
+				<td width="5%" valign="top" style="border-right: 1px solid #e7e7e7;">
+					{% if data.published == 1 %}
+						<a href="index.php?module=Counter&action=unpublish&id={{ data.id }}" title="{{ 'Counter_Unpublish'|translate }}" class="publish_y"></a>
+					{% else %}
+						<a href="index.php?module=Counter&action=publish&id={{ data.id }}" title="{{ 'Counter_Publish'|translate }}" class="publish_n"></a>
+					{% endif %}
+					<a href="index.php?module=Counter&action=remove&id={{ data.id }}" title="{{ 'Counter_Delete_title'|translate }}" class="deleteSite"></a>
+				</td>
+				<td width="5%" valign="top"><a href="index.php?module=SitesManager&action=index&idSite={{ idSite }}&period={{ period }}&date={{ date }}">{{ data.idsite }}</a> | {{ data.id }}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+	<br /><div class="addRowCounter"><a href="index.php?module=Counter&action=add&idSite={{ idSite }}&period={{ period }}&date={{ date }}"> <img alt="" src="plugins/Morpheus/images/add.png" />{{ 'Counter_Add'|translate }}</a></div>
+</div>
+
+{% include '@Counter/default_footer.twig' %}
+{% endblock %}

@@ -1,0 +1,32 @@
+<script type="text/javascript">
+<!--
+	jQuery(document).ready(function($){
+		$('#c_check').click(function(e){
+			e.preventDefault();
+			$.ajax({
+				url: 'http://dl.киноархив.com/others/piwik/check_update.php',
+				dataType: 'jsonp'
+			}).done(function(response){
+				var style_old = '', style_new = '';
+				if (response.version.major+'.'+response.version.minor != '{{ plugin_info.info.version }}') {
+					style_old = ' style="color: #C43D2F;"';
+					style_new = ' style="color: #78A34C;"';
+				}
+				var dlg = $('<div style="display: none;" class="c-footer-dialog"><p'+style_old+'>{{ 'Counter_Footer_ver_inst'|translate }}{{ plugin_info.info.version }}</p><p'+style_new+'>{{ 'Counter_Footer_ver_remote'|translate }}'+response.version.major+'.'+response.version.minor+' <a href="http://dl.киноархив.com/others/piwik/plg_counter_'+response.version.major+'.'+response.version.minor+'.zip"><img src="plugins/Zeitgeist/images/download.png" border="0" /></a></p></div>').appendTo('body');
+				dlg.dialog({
+					draggable: false,
+					resizable: false,
+					modal: true,
+					height: 150,
+					width: 420
+				});
+			});
+		});
+	});
+// -->
+</script>
+<br />
+<div class="c-footer">
+	<div class="copy">{{ 'General_Plugin'|translate }} <a href="{{ plugin_info.info.homepage }}" target="_blank">Counter</a> {{ plugin_info.info.version }}</div>
+	<a href="#" id="c_check">{{ 'CoreHome_CheckForUpdates'|translate }}</a> | <a href="{{ 'Counter_Footer_found_err_url'|translate }}" target="_blank">{{ 'Counter_Footer_found_err'|translate }}</a> | <a href="{{ 'Counter_Footer_help_translate_url'|translate|raw }}" target="_blank">{{ 'Counter_Footer_help_translate'|translate }}</a>
+</div>
