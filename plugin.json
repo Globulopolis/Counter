@@ -3,8 +3,7 @@
 	"version": "2.0",
 	"description": "Display Hits/Visits on image",
 	"theme": false,
-	"author": "Viper",
-	"author_homepage": "http://киноархив.com/",
+	"authors": [{"name":"Viper", "homepage": "http://киноархив.com/"}],
 	"homepage": "http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html",
 	"license": "GPL v2+",
 	"license_homepage": "http://www.gnu.org/licenses/gpl-2.0.html"
