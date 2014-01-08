@@ -210,6 +210,26 @@ class API extends \Piwik\Plugin\API {
 			if (empty($result['params']['token'])) {
 				$result['params']['token'] = Access::getInstance()->getTokenAuth();
 			}
+
+			/* Cross-Origin Resource Sharing (CORS) */
+			/* we fetch the urls associated to this counter */
+			$_q = "SELECT `main_url`,`url` FROM `".Common::prefixTable('site')."` LEFT JOIN `".Common::prefixTable('site_url')."` ";
+			$_q.= "ON ".Common::prefixTable('site').".idsite=".Common::prefixTable('site_url').".idsite ";
+			$_q.= "WHERE ".Common::prefixTable('site').".idsite = '".$row['idsite']."'";
+			$rows = Db::fetchAll($_q);
+
+			$origins = array();
+			$p = array('/http:\/\//', '/https:\/\//');
+			$r = array('', '');
+
+			if (!empty($rows)) {
+				foreach($rows as $row) {
+					$origins[] = $row['main_url'];
+					$origins[] = $row['url'];
+				}
+				$origins = array_unique(preg_replace($p, $r, $origins));
+			}
+			$result['origins'] = $origins;
 		}
 
 		return $result;
@@ -511,6 +531,30 @@ class API extends \Piwik\Plugin\API {
 		} else {
 			$request = new Request('method=Live.getCounters&idSite='.$params['idsite'].'&lastMinutes='.(int)$params['params']['last_minutes'].'&format=JSON&token_auth='.$params['params']['token']);
 			$result = json_decode($request->process());
+
+			/* Cross-Origin Resource Sharing (CORS) */
+			/* if piwik is hosted on a different site than the
+			 * page calling the js, then the browser will break
+			 * the script. This is unless a proper CORS is returned.
+			 * this is done by checking which the head 'Origin' with
+			 * the list of $params['origins'] and if there's a match
+			 * to return the proper 'Access-Control-Allow-Origin' header
+			 *
+			 * Limitations: Unsure how to distringuish/restrict http/https
+			 * at the moment, there's no checks on that. We only check
+			 * the hostname provided. Let's assume the counter in itself
+			 * isn't too much of a sensitive data anyway.
+			 */
+			$headers = getallheaders();
+			$p = array('/http:\/\//', '/https:\/\//');
+			$r = array('', '');
+
+			if ( array_key_exists('Origin', $headers)) {
+				$o = $headers['Origin'];
+				if ( in_array(preg_replace($p, $r, $o), $params['origins']) ) {
+					header('Access-Control-Allow-Origin: '. $o);
+				}
+			}
 
 			echo $result[0]->visits;
 		}
