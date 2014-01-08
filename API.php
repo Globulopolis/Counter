@@ -502,7 +502,7 @@ class API extends \Piwik\Plugin\API {
 
 		if ($type == 'js') {
 			$dom_elem_id = !empty($params['params']['livestat_elem_id']) ? $params['params']['livestat_elem_id'] : 'live_visitors';
-			$data_ajax_url = $_SERVER['SCRIPT_NAME'].'?module=Counter&action=live&id='.$id;
+			$data_ajax_url = (array_key_exists('HTTPS', $_SERVER) ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'].'/'. $_SERVER['SCRIPT_NAME'].'?module=Counter&action=live&id='.$id;
 
 			header('Content-type: text/javascript');
 
