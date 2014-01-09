@@ -210,6 +210,29 @@ class API extends \Piwik\Plugin\API {
 			if (empty($result['params']['token'])) {
 				$result['params']['token'] = Access::getInstance()->getTokenAuth();
 			}
+
+			/* Cross-Origin Resource Sharing (CORS) */
+			/* we fetch the urls associated to this counter */
+			$query = "SELECT `s`.`main_url`, `u`.`url`"
+				. "\n FROM `".Common::prefixTable('site')."` AS `s`"
+				. "\n LEFT JOIN `".Common::prefixTable('site_url')."` AS `u` ON `s`.`idsite` = `u`.`idsite`"
+				. "\n WHERE `s`.`idsite` = ".(int)$row['idsite'];
+			$rows = Db::fetchAll($query);
+
+			$origins = array();
+			$p = array('/http:\/\//', '/https:\/\//');
+			$r = array('', '');
+
+			if (!empty($rows)) {
+				foreach($rows as $row) {
+					$origins[] = $row['main_url'];
+					$origins[] = $row['url'];
+				}
+
+				$origins = array_unique(preg_replace($p, $r, $origins));
+			}
+
+			$result['origins'] = $origins;
 		}
 
 		return $result;
@@ -490,6 +513,7 @@ class API extends \Piwik\Plugin\API {
 			)
 		);
 
+		@set_time_limit(0);
 		echo $this->createImage($params);
 	}
 
@@ -502,7 +526,7 @@ class API extends \Piwik\Plugin\API {
 
 		if ($type == 'js') {
 			$dom_elem_id = !empty($params['params']['livestat_elem_id']) ? $params['params']['livestat_elem_id'] : 'live_visitors';
-			$data_ajax_url = $_SERVER['SCRIPT_NAME'].'?module=Counter&action=live&id='.$id;
+			$data_ajax_url = (array_key_exists('HTTPS', $_SERVER) ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'].'/'. $_SERVER['SCRIPT_NAME'].'?module=Counter&action=live&id='.$id;
 
 			header('Content-type: text/javascript');
 
@@ -511,6 +535,31 @@ class API extends \Piwik\Plugin\API {
 		} else {
 			$request = new Request('method=Live.getCounters&idSite='.$params['idsite'].'&lastMinutes='.(int)$params['params']['last_minutes'].'&format=JSON&token_auth='.$params['params']['token']);
 			$result = json_decode($request->process());
+
+			/* Cross-Origin Resource Sharing (CORS) */
+			/* if piwik is hosted on a different site than the
+			 * page calling the js, then the browser will break
+			 * the script. This is unless a proper CORS is returned.
+			 * this is done by checking which the head 'Origin' with
+			 * the list of $params['origins'] and if there's a match
+			 * to return the proper 'Access-Control-Allow-Origin' header
+			 *
+			 * Limitations: Unsure how to distringuish/restrict http/https
+			 * at the moment, there's no checks on that. We only check
+			 * the hostname provided. Let's assume the counter in itself
+			 * isn't too much of a sensitive data anyway.
+			*/
+			$headers = getallheaders();
+			$protocol = array('/http:\/\//', '/https:\/\//');
+			$r = array('', '');
+
+			if (array_key_exists('Origin', $headers)) {
+				$origin = $headers['Origin'];
+
+				if ( in_array(preg_replace($protocol, $r, $origin), $params['origins']) ) {
+					header('Access-Control-Allow-Origin: '. $origin);
+				}
+			}
 
 			echo $result[0]->visits;
 		}
