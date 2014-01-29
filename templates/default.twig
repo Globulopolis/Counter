@@ -64,8 +64,8 @@
 			<tr>
 				<td>
 					<strong><a href="index.php?module=Counter&action=edit&id={{ data.id }}&idSite={{ idSite }}&period={{ period }}&date={{ date }}" title="{{ 'Counter_Edit_title'|translate }}">{% if data.title == '' %}{{ 'Counter_Sitename_nositename'|translate }}{% else %}{{ data.title }}{% endif %}</a></strong>
-					<div class="c-code">{{ 'Counter_Code'|translate }}&lt;img src="http://{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=show&{% if data.params.start_date == '' and data.params.start_date_period == 'none' %}date=2010-01-01&{% endif %}id={{ data.id }}" border="0" /&gt;</div>
-					<div class="c-code-live">{{ 'Counter_Code_live'|translate }}&lt;script type="text/javascript" src="http://{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=live&id={{ data.id }}&type=js"&gt;&lt;/script&gt;</div>
+					<div class="c-code">{{ 'Counter_Code'|translate }}&lt;img src="{{ server_vars.protocol }}{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=show&{% if data.params.start_date == '' and data.params.start_date_period == 'none' %}date=2010-01-01&{% endif %}id={{ data.id }}" border="0" /&gt;</div>
+					<div class="c-code-live">{{ 'Counter_Code_live'|translate }}&lt;script type="text/javascript" src="{{ server_vars.protocol }}{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=live&id={{ data.id }}&type=js"&gt;&lt;/script&gt;</div>
 				</td>
 				<td width="5%" valign="top" style="border-right: 1px solid #e7e7e7;">
 					{% if data.published == 1 %}

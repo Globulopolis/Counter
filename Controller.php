@@ -40,8 +40,9 @@ class Controller extends \Piwik\Plugin\Controller {
 		$view->period = Common::getRequestVar('period', 'day', 'string');
 		$view->date = Common::getRequestVar('date', 'yesterday', 'string');
 		$view->server_vars = array(
+			'protocol' => ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || $_SERVER['SERVER_PORT'] == 443) ? 'https://' : 'http://',
 			'server_name' => Common::sanitizeInputValue($_SERVER['SERVER_NAME']),
-			'php_self' => Common::sanitizeInputValue($_SERVER['PHP_SELF']),
+			'php_self' => Common::sanitizeInputValue($_SERVER['PHP_SELF'])
 		);
 
 		return $view->render();
