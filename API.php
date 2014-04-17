@@ -122,7 +122,9 @@ class API extends \Piwik\Plugin\API {
 			'last_minutes' => 		Common::getRequestVar('last_minutes', 30, 'int'),
 			'check_interval' => 	Common::getRequestVar('check_interval', 10000, 'int'),
 			'static' => 			Common::getRequestVar('static', 1, 'int'),
-			'livestat_elem_id' => 	Common::getRequestVar('livestat_elem_id', '', 'string')
+			'livestat_elem_id' => 	Common::getRequestVar('livestat_elem_id', '', 'string'),
+			'tpl_by_countries' => 	Common::getRequestVar('tpl_by_countries', '', 'string'),
+			'tpl_by_countries_elem_id' => Common::getRequestVar('tpl_by_countries_elem_id', '', 'string'),
 		));
 
 		if ($siteid == 0) {
@@ -204,6 +206,7 @@ class API extends \Piwik\Plugin\API {
 			$result['id'] = $row['id'];
 			$result['idsite'] = $row['idsite'];
 			$result['params'] = json_decode($row['params'], true);
+			$result['params']['tpl_by_countries'] = html_entity_decode($result['params']['tpl_by_countries'], ENT_QUOTES, 'UTF-8');
 			$result['title'] = $row['title'];
 			$result['published'] = $row['published'];
 
@@ -256,7 +259,7 @@ class API extends \Piwik\Plugin\API {
 		} else {
 			// Don't perfom checking for index
 			if ($is_index === false) {
-				if ($access->isSuperUser()) {
+				if ($access->hasSuperUserAccess()) {
 					return true;
 				}
 
@@ -288,9 +291,6 @@ class API extends \Piwik\Plugin\API {
 	}
 
 	private function createImage($extra=array()) {
-		// Read notes for shouldRethrowException() method @core/FrontController.php
-		define('PIWIK_ENABLE_DISPATCH', false);
-
 		$id = Common::getRequestVar('id', 0, 'int');
 		$params = count($extra) > 0 ? $extra : $this->getCountersData($id);
 		$date_request = Common::getRequestVar('date', '', 'string');
@@ -522,19 +522,53 @@ class API extends \Piwik\Plugin\API {
 		$id = Common::getRequestVar('id', 0, 'int');
 		$params = $this->getCountersData($id);
 
-		if ($params['published'] != 1) exit();
+		if ($params['published'] != 1) die();
 
 		if ($type == 'js') {
-			$dom_elem_id = !empty($params['params']['livestat_elem_id']) ? $params['params']['livestat_elem_id'] : 'live_visitors';
-			$data_ajax_url = (array_key_exists('HTTPS', $_SERVER) ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'].'/'. $_SERVER['SCRIPT_NAME'].'?module=Counter&action=live&id='.$id;
+			if (!empty($params['params']['tpl_by_countries'])) {
+				$dom_elem_id = $params['params']['tpl_by_countries_elem_id'];
+			} else {
+				$dom_elem_id = $params['params']['livestat_elem_id'];
+			}
+
+			$data_ajax_url = (array_key_exists('HTTPS', $_SERVER) ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'].'?module=Counter&action=live&id='.$id;
 
 			header('Content-type: text/javascript');
 
 			echo 'var elem = "'.$dom_elem_id.'", url = "'.$data_ajax_url.'"; function createXHR(){var a;if(window.ActiveXObject){try{a=new ActiveXObject("Microsoft.XMLHTTP")}catch(b){document.getElementById(elem).innerHTML=b.message;a=null}}else{a=new XMLHttpRequest}return a}function sendRequest(){var a=createXHR();a.onreadystatechange=function(){if(a.readyState===4){document.getElementById(elem).innerHTML=a.responseText}};a.open("GET",url,true);a.send()}sendRequest();';
 			echo ($params['params']['static'] == 0) ? 'setInterval(sendRequest, '.(int)$params['params']['check_interval'].');' : '';
 		} else {
-			$request = new Request('method=Live.getCounters&idSite='.$params['idsite'].'&lastMinutes='.(int)$params['params']['last_minutes'].'&format=JSON&token_auth='.$params['params']['token']);
-			$result = json_decode($request->process());
+			if (!empty($params['params']['tpl_by_countries'])) {
+				// Search for start_date value for period
+				if (preg_match('#\[date(.*?)\]#', $params['params']['tpl_by_countries'], $matches)) {
+					preg_match('#\[date(\sstart="(?P<start_date>.+?)")?(\sformat="(?P<date_format>.+?)")?(\send="(?P<end_date>.+?)")?\]#i', $params['params']['tpl_by_countries'], $m);
+
+					if (isset($m['start_date']) && !empty($m['start_date'])) {
+						$start_date = $m['start_date'];
+					} else {
+						$start_date = $params['params']['start_date'];
+					}
+
+					$end_date = (isset($m['end_date']) && !empty($m['end_date'])) ? $m['end_date'] : date('Y-m-d');
+
+					if (isset($m['date_format']) && !empty($m['date_format'])) {
+						$format = date($m['date_format'], strtotime($start_date));
+					} else {
+						$format = $start_date;
+					}
+
+					$date_range = $start_date.','.$end_date;
+				} else {
+					$format = '';
+					$date_range = $params['params']['start_date'].','.date('Y-m-d'); // default date range
+				}
+
+				$request = new Request('method=UserCountry.getCountry&idSite='.$params['idsite'].'&period=range&date='.$date_range.'&format=JSON&token_auth='.$params['params']['token']);
+				$result = json_decode($request->process());
+			} else {
+				$request = new Request('method=Live.getCounters&idSite='.$params['idsite'].'&lastMinutes='.(int)$params['params']['last_minutes'].'&format=JSON&token_auth='.$params['params']['token']);
+				$result = json_decode($request->process());
+			}
 
 			/* Cross-Origin Resource Sharing (CORS) */
 			/* if piwik is hosted on a different site than the
@@ -549,7 +583,18 @@ class API extends \Piwik\Plugin\API {
 			 * the hostname provided. Let's assume the counter in itself
 			 * isn't too much of a sensitive data anyway.
 			*/
-			$headers = getallheaders();
+			if (!function_exists('getallheaders')) {
+				// See http://www.php.net/manual/en/function.getallheaders.php#84262
+				$headers = '';
+				foreach ($_SERVER as $name=>$value) {
+					if (substr($name, 0, 5) == 'HTTP_') {
+						$headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+					}
+				}
+			} else {
+				$headers = getallheaders();
+			}
+
 			$protocol = array('/http:\/\//', '/https:\/\//');
 			$r = array('', '');
 
@@ -561,7 +606,38 @@ class API extends \Piwik\Plugin\API {
 				}
 			}
 
-			echo $result[0]->visits;
+			header('Content-type: text/html');
+
+			if (!empty($params['params']['tpl_by_countries'])) {
+				$nb_countries = count($result);
+				$nb_visits = 0;
+				$nb_actions = 0;
+
+				foreach ($result as $data) {
+					$nb_visits = $nb_visits + (int)$data->nb_visits;
+					$nb_actions = $nb_actions + (int)$data->nb_actions;
+				}
+
+				$patterns = array(
+					'nb_visits'=>'#\[nb_visits\]#',
+					'nb_countries'=>'#\[nb_countries\]#',
+					'nb_actions'=>'#\[nb_actions\]#',
+					'date'=>'#\[date(.*?)\]#'
+				);
+				$data = array(
+					'nb_visits'=>$nb_visits,
+					'nb_actions'=>$nb_actions,
+					'nb_countries'=>$nb_countries,
+					'date'=>$format,
+				);
+				ksort($data);
+				ksort($patterns);
+				$str = preg_replace($patterns, $data, $params['params']['tpl_by_countries']);
+
+				echo $str;
+			} else {
+				echo $result[0]->visits;
+			}
 		}
 	}
 

@@ -457,6 +457,31 @@
 						</label>
 					</td>
 				</tr>
+				<tr>
+					<td class="separator_parent" colspan="3"><strong>{{ 'Counter_Params_tpl_by_countries_sep'|translate }}</strong></td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="tpl_by_countries">{{ 'Counter_Params_tpl_by_countries'|translate }}</label></td>
+					<td>
+						<textarea name="tpl_by_countries" id="tpl_by_countries" cols="50" rows="5" spellcheck="false" style="width: 458px;">{{ data.params.tpl_by_countries }}</textarea>
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_tpl_by_countries_desc'|translate|raw }}</div>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td width="30%" valign="top"><label for="tpl_by_countries_elem_id">{{ 'Counter_Params_live_elemid'|translate }}</label></td>
+					<td>
+						<input type="text" name="tpl_by_countries_elem_id" value="{{ data.params.tpl_by_countries_elem_id }}" id="tpl_by_countries_elem_id" size="70" />
+					</td>
+					<td width="30%">
+						<label for="idsite">
+							<div class="ui-inline-help">{{ 'Counter_Params_live_elemid_desc'|translate|raw }}</div>
+						</label>
+					</td>
+				</tr>
 			</tbody>
 		</table>
 		<input type="hidden" name="module" value="Counter" />
