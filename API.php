@@ -563,6 +563,27 @@ class API extends \Piwik\Plugin\API {
 					$date_range = $params['params']['start_date'].','.date('Y-m-d'); // default date range
 				}
 
+				// Process offsets
+				// Visits
+				if (preg_match('#\[nb_visits(.*?)\]#', $params['params']['tpl_by_countries'], $nbv_matches)) {
+					preg_match('#\[nb_visits(\soffset="(?P<offset>.+?)")\]#i', $params['params']['tpl_by_countries'], $nbv_m);
+				} else {
+					$nbv_m = '';
+				}
+
+				// Countries
+				if (preg_match('#\[nb_countries(.*?)\]#', $params['params']['tpl_by_countries'], $nbc_matches)) {
+					preg_match('#\[nb_countries(\soffset="(?P<offset>.+?)")\]#i', $params['params']['tpl_by_countries'], $nbc_m);
+				} else {
+					$nbc_m = '';
+				}
+
+				if (preg_match('#\[nb_actions(.*?)\]#', $params['params']['tpl_by_countries'], $nbc_matches)) {
+					preg_match('#\[nb_actions(\soffset="(?P<offset>.+?)")\]#i', $params['params']['tpl_by_countries'], $nba_m);
+				} else {
+					$nba_m = '';
+				}
+
 				$request = new Request('method=UserCountry.getCountry&idSite='.$params['idsite'].'&period=range&date='.$date_range.'&format=JSON&token_auth='.$params['params']['token']);
 				$result = json_decode($request->process());
 			} else {
@@ -606,8 +627,6 @@ class API extends \Piwik\Plugin\API {
 				}
 			}
 
-			header('Content-type: text/html');
-
 			if (!empty($params['params']['tpl_by_countries'])) {
 				$nb_countries = count($result);
 				$nb_visits = 0;
@@ -618,10 +637,43 @@ class API extends \Piwik\Plugin\API {
 					$nb_actions = $nb_actions + (int)$data->nb_actions;
 				}
 
+				// Offsets for visitors
+				if (is_array($nbv_m)) {
+					if (array_key_exists('offset', $nbv_m) && substr($nbv_m['offset'], 0, 1) == '-') { // Negative offset
+						if ($nb_visits > 0) {
+							$nb_visits = $nb_visits - (int)substr($nbv_m['offset'], 1);
+						}
+					} elseif (array_key_exists('offset', $nbv_m) && substr($nbv_m['offset'], 0, 1) == '+') { // Positive offset
+						$nb_visits = $nb_visits + (int)substr($nbv_m['offset'], 1);
+					}
+				}
+
+				// Offsets for countries
+				if (is_array($nbc_m)) {
+					if (array_key_exists('offset', $nbc_m) && substr($nbc_m['offset'], 0, 1) == '-') { // Negative offset
+						if ($nb_countries > 0) {
+							$nb_countries = $nb_countries - (int)substr($nbc_m['offset'], 1);
+						}
+					} elseif (array_key_exists('offset', $nbc_m) && substr($nbc_m['offset'], 0, 1) == '+') { // Positive offset
+						$nb_countries = $nb_countries + (int)substr($nbc_m['offset'], 1);
+					}
+				}
+
+				// Offsets for actions
+				if (is_array($nba_m)) {
+					if (array_key_exists('offset', $nba_m) && substr($nba_m['offset'], 0, 1) == '-') { // Negative offset
+						if ($nb_actions > 0) {
+							$nb_actions = $nb_actions - (int)substr($nba_m['offset'], 1);
+						}
+					} elseif (array_key_exists('offset', $nba_m) && substr($nba_m['offset'], 0, 1) == '+') { // Positive offset
+						$nb_actions = $nb_actions + (int)substr($nba_m['offset'], 1);
+					}
+				}
+
 				$patterns = array(
-					'nb_visits'=>'#\[nb_visits\]#',
-					'nb_countries'=>'#\[nb_countries\]#',
-					'nb_actions'=>'#\[nb_actions\]#',
+					'nb_visits'=>'#\[nb_visits(.*?)\]#',
+					'nb_countries'=>'#\[nb_countries(.*?)\]#',
+					'nb_actions'=>'#\[nb_actions(.*?)\]#',
 					'date'=>'#\[date(.*?)\]#'
 				);
 				$data = array(
@@ -634,8 +686,10 @@ class API extends \Piwik\Plugin\API {
 				ksort($patterns);
 				$str = preg_replace($patterns, $data, $params['params']['tpl_by_countries']);
 
+				header('Content-type: text/html');
 				echo $str;
 			} else {
+				header('Content-type: text/html');
 				echo $result[0]->visits;
 			}
 		}

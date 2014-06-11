@@ -2,13 +2,16 @@
 
 ## Description
 
-Display Hits/Visits on image
+Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text via ajax requests.
 
 ## FAQ
 
 See http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
 
 ## Changelog
+2.0.4
+* Added custom offsets for visits/views/countries for 'visitors by countries' template.
+
 2.0.3
 * Added custom template for 'visitors by countries'. NB! 'Live visitors counter' works only if custom template field for 'Visitors by countries' is empty.
 * Fixed an error w/ undefined method Access::isSuperUser

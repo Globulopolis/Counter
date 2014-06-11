@@ -1,7 +1,7 @@
 {
 	"name": "Counter",
-	"version": "2.0.3",
-	"description": "Display Hits/Visits on image",
+	"version": "2.0.4",
+	"description": "Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text via ajax requests.",
 	"theme": false,
 	"authors": [{"name":"Viper", "homepage": "http://киноархив.com/"}],
 	"homepage": "http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html",
