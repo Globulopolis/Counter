@@ -13,7 +13,6 @@ use Piwik\Common;
 use Piwik\DataTable\Renderer\Json;
 use Piwik\Menu\MenuAdmin;
 use Piwik\Menu\MenuTop;
-use Piwik\Menu\MenuUser;
 use Piwik\Notification\Manager as NotificationManager;
 use Piwik\Piwik;
 use Piwik\View;
@@ -31,7 +30,6 @@ class Controller extends \Piwik\Plugin\Controller {
 		$view = new View('@Counter/default.twig');
 		$this->setBasicVariablesView($view);
 		$view->topMenu = MenuTop::getInstance()->getMenu();
-		//$view->userMenu = MenuUser::getInstance()->getMenu();
 		$view->adminMenu = MenuAdmin::getInstance()->getMenu();
 
 		$view->counters = $this->api->getCountersData();
@@ -67,7 +65,6 @@ class Controller extends \Piwik\Plugin\Controller {
 		$view = new View('@Counter/default_add.twig');
 		$this->setBasicVariablesView($view);
 		$view->topMenu = MenuTop::getInstance()->getMenu();
-		$view->userMenu = MenuUser::getInstance()->getMenu();
 		$view->adminMenu = MenuAdmin::getInstance()->getMenu();
 
 		$view->notifications = '';
@@ -87,7 +84,6 @@ class Controller extends \Piwik\Plugin\Controller {
 		$view = new View('@Counter/default_edit.twig');
 		$this->setBasicVariablesView($view);
 		$view->topMenu = MenuTop::getInstance()->getMenu();
-		$view->userMenu = MenuUser::getInstance()->getMenu();
 		$view->adminMenu = MenuAdmin::getInstance()->getMenu();
 
 		$view->notifications = '';

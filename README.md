@@ -9,9 +9,6 @@ Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text v
 See http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
 
 ## Changelog
-2.0.5
-* Fixed a bug w/ undefined variable 'userMenu' in '@CoreHome/_topBarTopMenu.twig' on new Piwik 2.4.0
-
 2.0.4
 * Added custom offsets for visits/views/countries for 'visitors by countries' template.
 
