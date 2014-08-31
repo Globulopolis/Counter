@@ -9,6 +9,10 @@ Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text v
 See http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
 
 ## Changelog
+2.0.6
+* Fixed an error when user select image with type different from png or gif. Now plugin support jpg image type.
+* Update colorpicker to latest.
+
 2.0.5
 * Fixed a bug w/ undefined variable 'userMenu' in '@CoreHome/_topBarTopMenu.twig' on new Piwik 2.4.0
 

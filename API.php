@@ -361,6 +361,19 @@ class API extends \Piwik\Plugin\API {
 				imagesavealpha($src_im, true);
 			} elseif ($mime == 'image/gif') {
 				$src_im = imagecreatefromgif($counter_params['img_path']);
+			} elseif ($mime == 'image/jpeg') {
+				$src_im = imagecreatefromjpeg($counter_params['img_path']);
+			} else { // Unsupported image type
+				// Output an 1x1 transparent gif
+				$im = imagecreatetruecolor(1, 1);
+				imagecolortransparent($im, imagecolorallocate($im, 0, 0, 0));
+
+				header('Content-type: image/gif');
+
+				imagegif($im);
+				imagedestroy($im);
+
+				exit();
 			}
 
 			list($w, $h) = getimagesize($counter_params['img_path']);
@@ -741,7 +754,7 @@ class API extends \Piwik\Plugin\API {
 				} elseif ($ext == 'gif') {
 					$mime = 'image/gif';
 				} elseif ($ext == 'jpg' || $ext == 'jpeg') {
-					$mime = 'image/jpg';
+					$mime = 'image/jpeg';
 				} elseif ($ext == 'bmp') {
 					$mime = 'image/bmp';
 				} else {
@@ -749,7 +762,7 @@ class API extends \Piwik\Plugin\API {
 				}
 			}
 		} else {
-			$mime = 'image/jpg';
+			$mime = 'image/jpeg';
 		}
 
 		return $mime;

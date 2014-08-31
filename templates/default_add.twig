@@ -6,13 +6,20 @@
 <style type="text/css" media="all">
 	@import url("plugins/Counter/assets/css/style.css");
 </style>
-<script type="text/javascript" src="plugins/Counter/assets/js/miniColors.min.js"></script>
+<script type="text/javascript" src="plugins/Counter/assets/js/minicolors.min.js"></script>
 <script type="text/javascript" src="plugins/Counter/assets/js/ui.aurora.min.js"></script>
 <script type="text/javascript">
 <!--
 	jQuery(document).ready(function($){
-		$('.color-picker').miniColors({
-			letterCase: 'uppercase',
+		$('.color-picker').each(function(){
+			$(this).minicolors({
+				control: $(this).attr('data-control') || 'hue',
+				defaultValue: $(this).attr('data-defaultValue') || '',
+				letterCase: $(this).attr('data-letterCase') || 'lowercase',
+				opacity: $(this).attr('data-opacity'),
+				position: $(this).attr('data-position') || 'bottom left',
+				theme: 'default'
+			});
 		});
 		$('.go_back').click(function(){
 			window.location.href = 'index.php?module=Counter&action=index&idSite={{ idSite }}&period={{ period }}&date={{ date }}';
@@ -104,7 +111,7 @@
 // -->
 </script>
 <div class="ui-widget-content">
-	<h2>{{ 'Counter_Page_main'|translate }} &bull; {{ 'Counter_Add'|translate }}</h2>
+	<h2><a href="index.php?module=Counter&action=index&idSite=1&period=day&date=yesterday">{{ 'Counter_Page_main'|translate }}</a> &bull; {{ 'Counter_Add'|translate }}</h2>
 	<form action="index.php" method="post" id="adminForm" autocomplete="off">
 		<table class="adminTable" style="width: 100%;">
 			<tbody id="tables">
