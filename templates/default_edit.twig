@@ -397,6 +397,7 @@
 						<select name="start_date_period" id="start_date_period">
 							<option value="none"{% if data.params.start_date_period == '' %} selected="selected"{% endif %}>-</option>
 							<option value="day"{% if data.params.start_date_period == 'day' %} selected="selected"{% endif %}>{{ 'CoreHome_PeriodDay'|translate }}</option>
+							<option value="yesterday"{% if data.params.start_date_period == 'yesterday' %} selected="selected"{% endif %}>{{ 'General_Yesterday'|translate }}</option>
 							<option value="week"{% if data.params.start_date_period == 'week' %} selected="selected"{% endif %}>{{ 'CoreHome_PeriodWeek'|translate }}</option>
 							<option value="month"{% if data.params.start_date_period == 'month' %} selected="selected"{% endif %}>{{ 'CoreHome_PeriodMonth'|translate }}</option>
 							<option value="year"{% if data.params.start_date_period == 'year' %} selected="selected"{% endif %}>{{ 'CoreHome_PeriodYear'|translate }}</option>

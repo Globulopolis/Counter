@@ -1,6 +1,6 @@
 {
 	"name": "Counter",
-	"version": "2.0.6",
+	"version": "2.0.7",
 	"description": "Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text via ajax requests.",
 	"theme": false,
 	"authors": [{"name":"Viper", "homepage": "http://киноархив.com/"}],

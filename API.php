@@ -313,6 +313,8 @@ class API extends \Piwik\Plugin\API {
 
 		if ($_date == 'day') {
 			$date = date('Y-m-d', mktime(0, 0, 0, date('m'), date('d')-1, date('Y')));
+		} elseif ($_date == 'yesterday') {
+			$date = date('Y-m-d', mktime(0, 0, 0, date('m'), date('d')-2, date('Y')));
 		} elseif ($_date == 'week') {
 			$date = date('Y-m-d', mktime(0, 0, 0, date('m'), date('d')-7, date('Y')));
 		} elseif ($_date == 'month') {
