@@ -9,6 +9,9 @@ Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text v
 See http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
 
 ## Changelog
+2.0.8
+* Fix for https://github.com/Globulopolis/Counter/issues/4#issuecomment-59620132
+
 2.0.7
 * Add 'yesterday' option for "Start date - period".
 
