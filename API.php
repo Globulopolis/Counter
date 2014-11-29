@@ -36,7 +36,7 @@ class API extends \Piwik\Plugin\API {
 
 	public function getPluginInfo() {
 		$pluginManager = \Piwik\Plugin\Manager::getInstance();
-		$plugins = $pluginManager->returnLoadedPluginsInfo();
+		$plugins = $pluginManager->loadAllPluginsAndGetTheirInfo();
 
 		return $plugins['Counter'];
 	}
