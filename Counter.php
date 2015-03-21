@@ -17,16 +17,6 @@ use Piwik\Menu\MenuTop;
 use Piwik\Piwik;
 
 class Counter extends \Piwik\Plugin {
-	public function getListHooksRegistered() {
-		return array(
-			'Menu.Admin.addItems' => 'addMenu'
-		);
-	}
-	
-	public function addMenu() {
-		MenuAdmin::getInstance()->addEntry('Counter_Settings', array('module' => 'Counter', 'action' => 'index'), !Piwik::isUserIsAnonymous(), $order = 10);
-	}
-
 	// This function needed if table for Counter plugin doesn't exists. E.g. we install plugin via copying into plugins folder.
 	public function activate() {
 		$this->install();

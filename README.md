@@ -9,6 +9,11 @@ Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text v
 See http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
 
 ## Changelog
+2.0.10
+* Fix for https://github.com/Globulopolis/Counter/issues/7
+* Add "require" into plugin.json because new menu required at least Piwik 2.4.0
+* Fixed icon in "Check for updates" modal.
+
 2.0.9
 * Fix for https://github.com/Globulopolis/Counter/issues/5
 
