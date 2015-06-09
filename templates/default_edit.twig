@@ -64,7 +64,8 @@
 							text: '{{ 'Counter_Counter_exists'|translate }}',
 							leave_only_first: true,
 							container: 'ui-state-error',
-							icon: 'ui-icon-alert'
+							icon: 'ui-icon-alert',
+							placement: 'prepend'
 						});
 						$('.save, .apply, .preview').prop('disabled', 'disabled');
 					} else {
@@ -153,354 +154,305 @@
 	});
 // -->
 </script>
-<div class="ui-widget-content">
+<div>
 	<h2><a href="index.php?module=Counter&action=index&idSite=1&period=day&date=yesterday">{{ 'Counter_Page_main'|translate }}</a> &bull; {{ 'Counter_Edit'|translate }}</h2>
 	<form action="index.php" method="post" id="adminForm" autocomplete="off">
-		<table class="adminTable" style="width:100%;">
-			<tbody id="tables">
-				<tr>
-					<td width="30%" valign="top"><label for="site">{{ 'Counter_Params_site'|translate }}</label></td>
-					<td>
-						<select name="siteid" id="idsite">
-							<option value="0">{{ 'Counter_Params_siteselect'|translate }}</option>
-							{% for site in list_sites %}
-							<option value="{{ site.idsite }}"{% if site.idsite == data.idsite %} selected="selected"{% endif %}>{{ site.idsite }} - {{ site.name }}</option>
-							{% endfor %}
-						</select>
-						<span class="check-state"></span>
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_site_desc'|translate|raw }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="title">{{ 'Counter_Params_sitename'|translate }}</label></td>
-					<td>
-						<input type="text" name="title" value="{{ data.title }}" id="title" size="70" maxlength="50" required />
-					</td>
-					<td width="30%">
-						<label for="title">
-							<div class="ui-inline-help">{{ 'Counter_Params_sitename_desc'|translate }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="pub">{{ 'Counter_Params_publish'|translate }}</label></td>
-					<td>
-						<input type="radio" name="published" id="published_on" value="1"{% if data.published == 1 %} checked="checked"{% endif %} /> <label for="published_on">{{ 'Counter_Params_yes'|translate }}</label>
-						<input type="radio" name="published" id="published_off" value="0"{% if data.published == 0 %} checked="checked"{% endif %} /> <label for="published_off">{{ 'Counter_Params_no'|translate }}</label>
-					</td>
-					<td width="30%">&nbsp;</td>
-				</tr>
-				<tr>
-					<td class="separator_parent" colspan="3"><strong>{{ 'Counter_Params_pos_sep'|translate }}</strong></td>
-				</tr>
-				<tr>
-					<td class="separator_children" colspan="3"><strong>{{ 'Counter_Params_pos_sep_sitename'|translate }}</strong></td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="show_sitename">{{ 'Counter_Params_show_sitename'|translate }}</label></td>
-					<td>
-						<input type="radio" name="show_sitename" id="show_sitename_on" value="1"{% if data.params.show_sitename == 1 %} checked="checked"{% endif %} /> <label for="show_sitename_on">{{ 'Counter_Params_yes'|translate }}</label>
-						<input type="radio" name="show_sitename" id="show_sitename_off" value="0"{% if data.params.show_sitename == 0 %} checked="checked"{% endif %} /> <label for="show_sitename_off">{{ 'Counter_Params_no'|translate }}</label>
-					</td>
-					<td width="30%">&nbsp;</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="sitename_pos_x">{{ 'Counter_Params_sitename_pos_label'|translate }}</label></td>
-					<td>
-						<input type="text" name="sitename_pos_x" value="{{ data.params.sitename_pos_x }}" id="sitename_pos_x" size="4" maxlength="3" />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}<br />
-						<input type="text" name="sitename_pos_y" value="{{ data.params.sitename_pos_y }}" id="sitename_pos_y" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="color_sitename">{{ 'Counter_Params_colors_sitename'|translate }}</label></td>
-					<td>
-						<input type="text" name="color_sitename" value="{{ data.params.color_sitename }}" id="color_sitename" size="7" maxlength="6" class="color-picker" required />
-					</td>
-					<td width="30%">
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="sitename_font_size">{{ 'Counter_Params_fontsize'|translate }}</label></td>
-					<td>
-						<input type="text" name="sitename_font_size" value="{{ data.params.sitename_font_size }}" id="sitename_font_size" size="3" maxlength="2" required />
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td class="separator_children" colspan="3"><strong>{{ 'Counter_Params_pos_sep_visits'|translate }}</strong></td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="show_visits">{{ 'Counter_Params_show_visits'|translate }}</label></td>
-					<td>
-						<input type="radio" name="show_visits" id="show_visits_on" value="1"{% if data.params.show_visits == 1 %} checked="checked"{% endif %} /> <label for="show_visits_on">{{ 'Counter_Params_yes'|translate }}</label>
-						<input type="radio" name="show_visits" id="show_visits_off" value="0"{% if data.params.show_visits == 0 %} checked="checked"{% endif %} /> <label for="show_visits_off">{{ 'Counter_Params_no'|translate }}</label>
-					</td>
-					<td width="30%">&nbsp;</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="visitors_pos_x">{{ 'Counter_Params_visitors_pos_label'|translate }}</label></td>
-					<td>
-						<input type="text" name="visitors_pos_x" value="{{ data.params.visitors_pos_x }}" id="visitors_pos_x" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}<br />
-						<input type="text" name="visitors_pos_y" value="{{ data.params.visitors_pos_y }}" id="visitors_pos_y" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="color_visits">{{ 'Counter_Params_colors_visits'|translate }}</label></td>
-					<td>
-						<input type="text" name="color_visits" value="{{ data.params.color_visits }}" id="color_visits" size="7" maxlength="6" class="color-picker" required />
-					</td>
-					<td width="30%">
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="visits_font_size">{{ 'Counter_Params_fontsize'|translate }}</label></td>
-					<td>
-						<input type="text" name="visits_font_size" value="{{ data.params.visits_font_size }}" id="visits_font_size" size="3" maxlength="2" required />
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td class="separator_children" colspan="3"><strong>{{ 'Counter_Params_pos_sep_hits'|translate }}</strong></td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="show_views">{{ 'Counter_Params_show_views'|translate }}</label></td>
-					<td>
-						<input type="radio" name="show_views" id="show_views_on" value="1"{% if data.params.show_views == 1 %} checked="checked"{% endif %} /> <label for="show_views_on">{{ 'Counter_Params_yes'|translate }}</label>
-						<input type="radio" name="show_views" id="show_views_off" value="0"{% if data.params.show_views == 0 %} checked="checked"{% endif %} /> <label for="show_views_off">{{ 'Counter_Params_no'|translate }}</label>
-					</td>
-					<td width="30%">&nbsp;</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="views_pos_x">{{ 'Counter_Params_views_pos_label'|translate }}</label></td>
-					<td>
-						<input type="text" name="views_pos_x" value="{{ data.params.views_pos_x }}" id="views_pos_x" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}<br />
-						<input type="text" name="views_pos_y" value="{{ data.params.views_pos_y }}" id="views_pos_y" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="color_views">{{ 'Counter_Params_colors_views'|translate }}</label></td>
-					<td>
-						<input type="text" name="color_views" value="{{ data.params.color_views }}" id="color_views" size="7" maxlength="6" class="color-picker" required />
-					</td>
-					<td width="30%">
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="hits_font_size">{{ 'Counter_Params_fontsize'|translate }}</label></td>
-					<td>
-						<input type="text" name="hits_font_size" value="{{ data.params.hits_font_size }}" id="hits_font_size" size="3" maxlength="2" required />
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td class="separator_parent" colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="img_size">{{ 'Counter_Params_img_size'|translate }}</label></td>
-					<td>
-						<input type="text" name="img_size_x" value="{{ data.params.img_size_x }}" id="img_size_x" size="4" maxlength="3" required />
-						&nbsp;x&nbsp;
-						<input type="text" name="img_size_y" value="{{ data.params.img_size_y }}" id="img_size_y" size="4" maxlength="3" required />
-						{{ 'Counter_Params_img_size_px'|translate }}
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_img_size_desc'|translate }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="img_path">{{ 'Counter_Params_img_path'|translate }}</label></td>
-					<td>
-						<input type="text" name="img_path" value="{{ data.params.img_path }}" id="img_path" class="paths" size="70" />
-						<span>&nbsp;</span>
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_img_path_desc'|translate }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="font_path">{{ 'Counter_Params_fontpath'|translate }}</label></td>
-					<td>
-						<input type="text" name="font_path" value="{{ data.params.font_path }}" id="font_path" class="paths" size="70" />
-						<span>&nbsp;</span>
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_fontpath_desc'|translate }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="cache">{{ 'Counter_Params_cache'|translate }}</label></td>
-					<td>
-						<input type="radio" name="cache" id="cache_on" value="1"{% if data.params.cache == 1 %} checked="checked"{% endif %} /> <label for="cache_on">{{ 'Counter_Params_yes'|translate }}</label>
-						<input type="radio" name="cache" id="cache_off" value="0"{% if data.params.cache == 0 %} checked="checked"{% endif %} /> <label for="cache_off">{{ 'Counter_Params_no'|translate }}</label>
-						<span style="display: block; clear: none; float: right;"><a href="index.php?module=Counter&action=clearCache&id={{ data.id }}&lifetime={{ data.params.cache_time }}" id="clearCache">{{ 'Counter_Params_cache_clear'|translate }}</a></span>
-						<span id="cache"></span>
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_cache_off'|translate }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="cache_time">{{ 'Counter_Params_cache_time'|translate }}</label></td>
-					<td>
-						<input type="text" name="cache_time" value="{{ data.params.cache_time }}" id="cache_time" size="7" maxlength="6" required />{{ 'Counter_Params_seconds'|translate }}
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_cache_time_desc'|translate }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="start_date">{{ 'Counter_Params_datestart'|translate }}</label></td>
-					<td><a name="date_global"></a>
-						<input type="text" name="start_date" value="{{ data.params.start_date }}" id="start_date" size="11" maxlength="10" />
-						<label for="">{{ 'Counter_Params_datestart_period'|translate }}</label>
-						<select name="start_date_period" id="start_date_period">
-							<option value="none"{% if data.params.start_date_period == '' %} selected="selected"{% endif %}>-</option>
-							<option value="day"{% if data.params.start_date_period == 'day' %} selected="selected"{% endif %}>{{ 'CoreHome_PeriodDay'|translate }}</option>
-							<option value="yesterday"{% if data.params.start_date_period == 'yesterday' %} selected="selected"{% endif %}>{{ 'General_Yesterday'|translate }}</option>
-							<option value="week"{% if data.params.start_date_period == 'week' %} selected="selected"{% endif %}>{{ 'CoreHome_PeriodWeek'|translate }}</option>
-							<option value="month"{% if data.params.start_date_period == 'month' %} selected="selected"{% endif %}>{{ 'CoreHome_PeriodMonth'|translate }}</option>
-							<option value="year"{% if data.params.start_date_period == 'year' %} selected="selected"{% endif %}>{{ 'CoreHome_PeriodYear'|translate }}</option>
-						</select>
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_datestart_desc'|translate|raw }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="token">{{ 'Counter_Params_token_auth'|translate }}</label></td>
-					<td>
-						<input type="text" name="token" value="{{ data.params.token }}" id="token" size="70" maxlength="64" required />
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_token_auth_desc'|translate }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td class="separator_parent" colspan="3"><strong>{{ 'Counter_Params_live_sep'|translate }}</strong></td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="last_minutes">{{ 'Counter_Params_live_period'|translate }}</label></td>
-					<td>
-						<input type="text" name="last_minutes" value="{{ data.params.last_minutes }}" id="last_minutes" size="4" maxlength="3" />
-					</td>
-					<td width="30%">
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="check_interval">{{ 'Counter_Params_live_interval'|translate }}</label></td>
-					<td>
-						<input type="text" name="check_interval" value="{{ data.params.check_interval }}" id="check_interval" size="7" maxlength="6" />
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_live_interval_desc'|translate }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label>{{ 'Counter_Params_live_static'|translate }}</label></td>
-					<td>
-						<input type="radio" name="static" id="static_on" value="1"{% if data.params.static == 1 %} checked="checked"{% endif %} /> <label for="static_on">{{ 'Counter_Params_yes'|translate }}</label>
-						<input type="radio" name="static" id="static_off" value="0"{% if data.params.static == 0 %} checked="checked"{% endif %} /> <label for="static_off">{{ 'Counter_Params_no'|translate }}</label>
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_live_static_desc'|translate }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="livestat_elem_id">{{ 'Counter_Params_live_elemid'|translate }}</label></td>
-					<td>
-						<input type="text" name="livestat_elem_id" value="{{ data.params.livestat_elem_id }}" id="livestat_elem_id" size="70" />
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_live_elemid_desc'|translate|raw }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td class="separator_parent" colspan="3"><strong>{{ 'Counter_Params_tpl_by_countries_sep'|translate }}</strong></td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="tpl_by_countries">{{ 'Counter_Params_tpl_by_countries'|translate }}</label></td>
-					<td>
-						<textarea name="tpl_by_countries" id="tpl_by_countries" cols="50" rows="5" spellcheck="false" style="width: 458px;">{{ data.params.tpl_by_countries }}</textarea>
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_tpl_by_countries_desc'|translate|raw }}</div>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<td width="30%" valign="top"><label for="tpl_by_countries_elem_id">{{ 'Counter_Params_live_elemid'|translate }}</label></td>
-					<td>
-						<input type="text" name="tpl_by_countries_elem_id" value="{{ data.params.tpl_by_countries_elem_id }}" id="tpl_by_countries_elem_id" size="70" />
-					</td>
-					<td width="30%">
-						<label for="idsite">
-							<div class="ui-inline-help">{{ 'Counter_Params_live_elemid_desc'|translate|raw }}</div>
-						</label>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+		<p class="ng-binding"><label for="site">{{ 'Counter_Params_site'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_site_desc'|translate|raw }}</div>
+			</div>
+			<select name="siteid" id="idsite" class="ng-isolate-scope ng-pristine ng-valid">
+				<option value="0">{{ 'Counter_Params_siteselect'|translate }}</option>
+				{% for site in list_sites %}
+				<option value="{{ site.idsite }}"{% if site.idsite == data.idsite %} selected="selected"{% endif %}>{{ site.idsite }} - {{ site.name }}</option>
+				{% endfor %}
+			</select>
+			<span class="check-state"></span>
+		</div>
+
+		<p class="ng-binding"><label for="title">{{ 'Counter_Params_sitename'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_sitename_desc'|translate }}</div>
+			</div>
+			<input type="text" name="title" value="{{ data.title }}" id="title" size="70" maxlength="50" required />
+		</div>
+
+		<p class="ng-binding"><label for="pub">{{ 'Counter_Params_publish'|translate }}</label></p>
+		<div class="form-group">
+			<label class="radio">
+				<input type="radio" name="published" value="1"{% if data.published == 1 %} checked="checked"{% endif %} />
+				{{ 'General_Yes'|translate }}
+			</label>
+			<label class="radio">
+				<input type="radio" name="published" value="0"{% if data.published == 0 %} checked="checked"{% endif %} />
+				{{ 'General_No'|translate }}
+			</label>
+		</div>
+
+		<p class="separator_parent"><strong>{{ 'Counter_Params_pos_sep'|translate }}</strong></p>
+		<p class="separator_children"><strong>{{ 'Counter_Params_pos_sep_sitename'|translate }}</strong></p>
+
+		<p class="ng-binding"><label for="show_sitename">{{ 'Counter_Params_show_sitename'|translate }}</label></p>
+		<div class="form-group">
+			<label class="radio">
+				<input type="radio" name="show_sitename" value="1"{% if data.params.show_sitename == 1 %} checked="checked"{% endif %} />
+				{{ 'General_Yes'|translate }}
+			</label>
+			<label class="radio">
+				<input type="radio" name="show_sitename" value="0"{% if data.params.show_sitename == 0 %} checked="checked"{% endif %} />
+				{{ 'General_No'|translate }}
+			</label>
+		</div>
+
+		<p class="ng-binding"><label for="sitename_pos_x">{{ 'Counter_Params_sitename_pos_label'|translate }}</label></p>
+		<div class="form-group sitename">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
+			</div>
+			<input type="text" name="sitename_pos_x" value="{{ data.params.sitename_pos_x }}" id="sitename_pos_x" size="4" maxlength="3" />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}<br />
+			<input type="text" name="sitename_pos_y" value="{{ data.params.sitename_pos_y }}" id="sitename_pos_y" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
+		</div>
+
+		<p class="ng-binding"><label for="color_sitename">{{ 'Counter_Params_colors_sitename'|translate }}</label></p>
+		<div class="form-group">
+			<input type="text" name="color_sitename" value="{{ data.params.color_sitename }}" id="color_sitename" size="7" maxlength="6" class="color-picker" required />
+		</div>
+
+		<p class="ng-binding"><label for="sitename_font_size">{{ 'Counter_Params_fontsize'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
+			</div>
+			<input type="text" name="sitename_font_size" value="{{ data.params.sitename_font_size }}" id="sitename_font_size" size="3" maxlength="2" required />
+		</div>
+
+		<p class="separator_children"><strong>{{ 'Counter_Params_pos_sep_visits'|translate }}</strong></p>
+
+		<p class="ng-binding"><label for="show_visits">{{ 'Counter_Params_show_visits'|translate }}</label></p>
+		<div class="form-group">
+			<label class="radio">
+				<input type="radio" name="show_visits" value="1"{% if data.params.show_visits == 1 %} checked="checked"{% endif %} />
+				{{ 'General_Yes'|translate }}
+			</label>
+			<label class="radio">
+				<input type="radio" name="show_visits" value="0"{% if data.params.show_visits == 0 %} checked="checked"{% endif %} />
+				{{ 'General_No'|translate }}
+			</label>
+		</div>
+
+		<p class="ng-binding"><label for="visitors_pos_x">{{ 'Counter_Params_visitors_pos_label'|translate }}</label></p>
+		<div class="form-group visits">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
+			</div>
+			<input type="text" name="visitors_pos_x" value="{{ data.params.visitors_pos_x }}" id="visitors_pos_x" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}<br />
+			<input type="text" name="visitors_pos_y" value="{{ data.params.visitors_pos_y }}" id="visitors_pos_y" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
+		</div>
+
+		<p class="ng-binding"><label for="color_visits">{{ 'Counter_Params_colors_visits'|translate }}</label></p>
+		<div class="form-group">
+			<input type="text" name="color_visits" value="{{ data.params.color_visits }}" id="color_visits" size="7" maxlength="6" class="color-picker" required />
+		</div>
+
+		<p class="ng-binding"><label for="visits_font_size">{{ 'Counter_Params_fontsize'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
+			</div>
+			<input type="text" name="visits_font_size" value="{{ data.params.visits_font_size }}" id="visits_font_size" size="3" maxlength="2" required />
+		</div>
+
+		<p class="separator_children"><strong>{{ 'Counter_Params_pos_sep_hits'|translate }}</strong></p>
+
+		<p class="ng-binding"><label for="show_views">{{ 'Counter_Params_show_views'|translate }}</label></p>
+		<div class="form-group">
+			<label class="radio">
+				<input type="radio" name="show_views" value="1"{% if data.params.show_views == 1 %} checked="checked"{% endif %} />
+				{{ 'General_Yes'|translate }}
+			</label>
+			<label class="radio">
+				<input type="radio" name="show_views" value="0"{% if data.params.show_views == 0 %} checked="checked"{% endif %} />
+				{{ 'General_No'|translate }}
+			</label>
+		</div>
+
+		<p class="ng-binding"><label for="views_pos_x">{{ 'Counter_Params_views_pos_label'|translate }}</label></p>
+		<div class="form-group views">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
+			</div>
+			<input type="text" name="views_pos_x" value="{{ data.params.views_pos_x }}" id="views_pos_x" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}<br />
+			<input type="text" name="views_pos_y" value="{{ data.params.views_pos_y }}" id="views_pos_y" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
+		</div>
+
+		<p class="ng-binding"><label for="color_views">{{ 'Counter_Params_colors_views'|translate }}</label></p>
+		<div class="form-group">
+			<input type="text" name="color_views" value="{{ data.params.color_views }}" id="color_views" size="7" maxlength="6" class="color-picker" required />
+		</div>
+
+		<p class="ng-binding"><label for="hits_font_size">{{ 'Counter_Params_fontsize'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
+			</div>
+			<input type="text" name="hits_font_size" value="{{ data.params.hits_font_size }}" id="hits_font_size" size="3" maxlength="2" required />
+		</div>
+
+		<p class="separator_parent">&nbsp;</p>
+
+		<p class="ng-binding"><label for="img_size">{{ 'Counter_Params_img_size'|translate }}</label></p>
+		<div class="form-group img_size">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_img_size_desc'|translate }}</div>
+			</div>
+			<input type="text" name="img_size_x" value="{{ data.params.img_size_x }}" id="img_size_x" size="4" maxlength="3" required />&nbsp;x&nbsp;
+			<input type="text" name="img_size_y" value="{{ data.params.img_size_y }}" id="img_size_y" size="4" maxlength="3" required />{{ 'Counter_Params_img_size_px'|translate }}
+		</div>
+
+		<p class="ng-binding"><label for="img_path">{{ 'Counter_Params_img_path'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_img_path_desc'|translate }}</div>
+			</div>
+			<input type="text" name="img_path" value="{{ data.params.img_path }}" id="img_path" class="paths" size="70" />
+			<span>&nbsp;</span>
+		</div>
+
+		<p class="ng-binding"><label for="font_path">{{ 'Counter_Params_fontpath'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_fontpath_desc'|translate }}</div>
+			</div>
+			<input type="text" name="font_path" value="{{ data.params.font_path }}" id="font_path" class="paths" size="70" />
+			<span>&nbsp;</span>
+		</div>
+
+		<p class="ng-binding"><label for="cache">{{ 'Counter_Params_cache'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_cache_off'|translate }}</div>
+			</div>
+			<label class="radio">
+				<input type="radio" name="cache" value="1"{% if data.params.cache == 1 %} checked="checked"{% endif %} />
+				{{ 'General_Yes'|translate }}
+			</label>
+			<label class="radio">
+				<input type="radio" name="cache" value="0"{% if data.params.cache == 0 %} checked="checked"{% endif %} />
+				{{ 'General_No'|translate }}
+			</label>
+			<span style="display: block; clear: none; float: right;"><a href="index.php?module=Counter&action=clearCache&id={{ data.id }}&lifetime={{ data.params.cache_time }}" id="clearCache">{{ 'Counter_Params_cache_clear'|translate }}</a></span>
+			<span id="cache"></span>
+		</div>
+
+		<p class="ng-binding"><label for="cache_time">{{ 'Counter_Params_cache_time'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_cache_time_desc'|translate }}</div>
+			</div>
+			<div class="input-group">
+				<input type="text" name="cache_time" value="{{ data.params.cache_time }}" id="cache_time" size="7" maxlength="7" required />
+				<span class="input-group-addon"> {{ 'Counter_Params_seconds'|translate }}</span>
+			</div>
+		</div>
+
+		<p class="ng-binding"><label for="start_date">{{ 'Counter_Params_datestart'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_datestart_desc'|translate|raw }}</div>
+			</div>
+			<a name="date_global"></a>
+			<input type="text" name="start_date" value="{{ data.params.start_date }}" id="start_date" size="11" maxlength="10" />
+			<label for="start_date_period">{{ 'Counter_Params_datestart_period'|translate }}</label>
+			<select name="start_date_period" id="start_date_period">
+				<option value="none"{% if data.params.start_date_period == '' %} selected="selected"{% endif %}>-</option>
+				<option value="day"{% if data.params.start_date_period == 'day' %} selected="selected"{% endif %}>{{ 'CoreHome_PeriodDay'|translate }}</option>
+				<option value="yesterday"{% if data.params.start_date_period == 'yesterday' %} selected="selected"{% endif %}>{{ 'General_Yesterday'|translate }}</option>
+				<option value="week"{% if data.params.start_date_period == 'week' %} selected="selected"{% endif %}>{{ 'CoreHome_PeriodWeek'|translate }}</option>
+				<option value="month"{% if data.params.start_date_period == 'month' %} selected="selected"{% endif %}>{{ 'CoreHome_PeriodMonth'|translate }}</option>
+				<option value="year"{% if data.params.start_date_period == 'year' %} selected="selected"{% endif %}>{{ 'CoreHome_PeriodYear'|translate }}</option>
+			</select>
+		</div>
+
+		<p class="ng-binding"><label for="token">{{ 'Counter_Params_token_auth'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_token_auth_desc'|translate }}</div>
+			</div>
+			<input type="text" name="token" value="{{ data.params.token }}" id="token" size="70" maxlength="64" required />
+		</div>
+
+		<p class="separator_parent"><strong>{{ 'Counter_Params_live_sep'|translate }}</strong></p>
+
+		<p class="ng-binding"><label for="last_minutes">{{ 'Counter_Params_live_period'|translate }}</label></p>
+		<div class="form-group">
+			<div class="input-group">
+				<input type="text" name="last_minutes" value="{{ data.params.last_minutes }}" id="last_minutes" size="4" maxlength="3" />
+				<span class="input-group-addon"> minutes</span>
+			</div>
+		</div>
+
+		<p class="ng-binding"><label for="check_interval">{{ 'Counter_Params_live_interval'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_live_interval_desc'|translate }}</div>
+			</div>
+			<div class="input-group">
+				<input type="text" name="check_interval" value="{{ data.params.check_interval }}" id="check_interval" size="7" maxlength="6" />
+				<span class="input-group-addon"> msec</span>
+			</div>
+		</div>
+
+		<p class="ng-binding"><label>{{ 'Counter_Params_live_static'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_live_static_desc'|translate }}</div>
+			</div>
+			<label class="radio">
+				<input type="radio" name="static" value="1"{% if data.params.static == 1 %} checked="checked"{% endif %} />
+				{{ 'General_Yes'|translate }}
+			</label>
+			<label class="radio">
+				<input type="radio" name="static" value="0"{% if data.params.static == 0 %} checked="checked"{% endif %} />
+				{{ 'General_No'|translate }}
+			</label>
+		</div>
+
+		<p class="ng-binding"><label for="livestat_elem_id">{{ 'Counter_Params_live_elemid'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_live_elemid_desc'|translate|raw }}</div>
+			</div>
+			<input type="text" name="livestat_elem_id" value="{{ data.params.livestat_elem_id }}" id="livestat_elem_id" size="70" />
+		</div>
+
+		<p class="separator_parent"><strong>{{ 'Counter_Params_tpl_by_countries_sep'|translate }}</strong></p>
+
+		<p class="ng-binding"><label for="tpl_by_countries">{{ 'Counter_Params_tpl_by_countries'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_tpl_by_countries_desc'|translate|raw }}</div>
+			</div>
+			<textarea name="tpl_by_countries" id="tpl_by_countries" cols="50" rows="5" spellcheck="false">{{ data.params.tpl_by_countries }}</textarea>
+		</div>
+
+		<p class="ng-binding"><label for="tpl_by_countries_elem_id">{{ 'Counter_Params_live_elemid'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_live_elemid_desc'|translate|raw }}</div>
+			</div>
+			<input type="text" name="tpl_by_countries_elem_id" value="{{ data.params.tpl_by_countries_elem_id }}" id="tpl_by_countries_elem_id" size="70" />
+		</div>
+
 		<input type="hidden" name="module" value="Counter" />
 		<input type="hidden" name="action" value="" id="action" />
 		<input type="hidden" name="id" value="{{ data.id }}" />
-		<p>
-			<input type="button" value="{{ 'General_Save'|translate }}" class="submit save" />
-			<input type="button" value="{{ 'Counter_Apply'|translate }}" class="submit apply" />
-			<input type="button" value="{{ 'Counter_Preview'|translate }}" class="submit preview" />
-			<input type="button" value="{{ 'General_Close'|translate }}" class="submit go_back" />
-		</p>
+
+		<input type="button" value="{{ 'General_Save'|translate }}" class="btn save" />
+		<input type="button" value="{{ 'Counter_Apply'|translate }}" class="btn apply" />
+		<input type="button" value="{{ 'Counter_Preview'|translate }}" class="btn preview" />
+		<input type="button" value="{{ 'General_Close'|translate }}" class="btn go_back" />
 	</form>
 </div>
 

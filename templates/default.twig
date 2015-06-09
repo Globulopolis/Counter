@@ -46,9 +46,9 @@
 	});
 // -->
 </script>
-<div class="ui-widget-content counters-list">
+<div class="counters-list">
 	<h2>{{ 'Counter_Page_main'|translate }}</h2>
-	<div class="addRowCounter"><a href="index.php?module=Counter&action=add&idSite={{ idSite }}&period={{ period }}&date={{ date }}"> <img alt="" src="plugins/Morpheus/images/add.png" />{{ 'Counter_Add'|translate }}</a></div><br />
+	<div class="addRowCounter"><a href="index.php?module=Counter&action=add&idSite={{ idSite }}&period={{ period }}&date={{ date }}" class="btn btn-primary">{{ 'Counter_Add'|translate }}</a></div><br />
 	{{ 'Counter_Page_main_desc'|translate }}
 
 	<table width="100%" border="0" class="entityTable dataTable">
@@ -81,7 +81,7 @@
 		</tbody>
 	</table>
 
-	<br /><div class="addRowCounter"><a href="index.php?module=Counter&action=add&idSite={{ idSite }}&period={{ period }}&date={{ date }}"> <img alt="" src="plugins/Morpheus/images/add.png" />{{ 'Counter_Add'|translate }}</a></div>
+	<br /><div class="addRowCounter"><a href="index.php?module=Counter&action=add&idSite={{ idSite }}&period={{ period }}&date={{ date }}" class="btn btn-primary">{{ 'Counter_Add'|translate }}</a></div>
 </div>
 
 {% include '@Counter/default_footer.twig' %}
