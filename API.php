@@ -2,7 +2,7 @@
 /**
  * @package		Piwik.Counter.API
  * @copyright	Copyright (C) 2010 Libra.ms. All rights reserved.
- * @license		GNU General Public License version 2 or later
+ * @license		GNU General Public License version 3 or later
  * @url			http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
  * @url			http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
  */
@@ -751,7 +751,7 @@ class API extends \Piwik\Plugin\API {
 	/**
 	 * Method to get proper MIME type
 	 *
-	 * @param   string  $path		Absolute path to file
+	 * @param   string  $path    Absolute path to file
 	 *
 	 * @return	string
 	 */

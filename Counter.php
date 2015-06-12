@@ -2,7 +2,7 @@
 /**
  * @package		Piwik.Counter
  * @copyright	Copyright (C) 2010 Libra.ms. All rights reserved.
- * @license		GNU General Public License version 2 or later
+ * @license		GNU General Public License version 3 or later
  * @url			http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
  * @url			http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
  */
