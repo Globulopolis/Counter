@@ -14,19 +14,19 @@ use Piwik\DataTable\Renderer\Json;
 use Piwik\Menu\MenuAdmin;
 use Piwik\Menu\MenuTop;
 use Piwik\Menu\MenuUser;
-use Piwik\Notification\Manager as NotificationManager;
 use Piwik\Piwik;
 use Piwik\View;
 use Piwik\Plugin;
 
 class Controller extends \Piwik\Plugin\Controller {
 	public function __construct() {
-		// Get API from Plugins\Counter\API
+		parent::__construct();
+
 		$this->api = API::getInstance();
 	}
 
 	public function index() {
-		$this->api->checkAccess(true);
+		//$this->api->checkAccess(true);
 
 		$view = new View('@Counter/default.twig');
 		$this->setBasicVariablesView($view);
@@ -34,7 +34,7 @@ class Controller extends \Piwik\Plugin\Controller {
 		$view->userMenu = MenuUser::getInstance()->getMenu();
 		$view->adminMenu = MenuAdmin::getInstance()->getMenu();
 
-		$view->counters = $this->api->getCountersData();
+		$view->counters = $this->api->getItems();
 		$view->notifications = '';
 		$view->siteName = Piwik::translate('Counter_Settings');
 		$view->plugin_info = $this->api->getPluginInfo();
@@ -51,14 +51,30 @@ class Controller extends \Piwik\Plugin\Controller {
 	}
 
 	public function unpublish() {
-		return $this->publish(true);
+		$this->publish(0);
 	}
 
-	public function publish($state=false) {
-		$this->api->checkAccess();
-
-		$result = $this->api->publish(Common::getRequestVar('id', 0, 'int'), $state);
+	public function publish($state=1) {
+		$this->api->publish(Common::getRequestVar('id', array(), 'array'), $state);
 		$this->redirectToIndex('Counter', 'index');
+	}
+
+	public function remove() {
+		$result = $this->api->remove(Common::getRequestVar('id', array(), 'array'));
+
+		Json::sendHeaderJSON();
+		echo $result;
+	}
+
+	public function clearCache($ids) {
+		// TODO Implement array checking
+		//$this->api->checkAccess();
+
+		$ids = Common::getRequestVar('id', array(), 'array');
+		$result = $this->api->clearCache($ids);
+
+		Json::sendHeaderJSON();
+		echo $result;
 	}
 
 	public function add() {
@@ -117,15 +133,6 @@ class Controller extends \Piwik\Plugin\Controller {
 		}
 	}
 
-	public function remove() {
-		$this->api->checkAccess();
-
-		$result = $this->api->remove(Common::getRequestVar('id', 0, 'int'));
-
-		Json::sendHeaderJSON();
-		echo $result;
-	}
-
 	public function siteidPrecheck() {
 		$this->api->checkAccess();
 
@@ -147,13 +154,6 @@ class Controller extends \Piwik\Plugin\Controller {
 	public function preview() {
 		$this->api->checkAccess();
 		$this->api->previewImage();
-	}
-
-	public function clearCache() {
-		$this->api->checkAccess();
-
-		Json::sendHeaderJSON();
-		echo $this->api->clearCache();
 	}
 
 	public function show() {

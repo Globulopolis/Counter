@@ -74,8 +74,9 @@
 						});
 						$('.save, .apply').prop('disabled', 'disabled');
 					} else {
-						if ($('#start_date').val() == '') {
-							$('#start_date').val(response.ts_created);
+						var start_date = $('#start_date');
+						if (start_date.val() == '') {
+							start_date.val(response.ts_created);
 						}
 						$('.save, .apply').removeProp('disabled');
 						_this.attr('disabled', false);

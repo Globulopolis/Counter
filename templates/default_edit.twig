@@ -342,7 +342,7 @@
 				<input type="radio" name="cache" value="0"{% if data.params.cache == 0 %} checked="checked"{% endif %} />
 				{{ 'General_No'|translate }}
 			</label>
-			<span style="display: block; clear: none; float: right;"><a href="index.php?module=Counter&action=clearCache&id={{ data.id }}&lifetime={{ data.params.cache_time }}" id="clearCache">{{ 'Counter_Params_cache_clear'|translate }}</a></span>
+			<span style="display: block; clear: none; float: right;"><a href="index.php?module=Counter&action=clearCache&id[]={{ data.id }}&lifetime={{ data.params.cache_time }}" id="clearCache">{{ 'Counter_Params_cache_clear'|translate }}</a></span>
 			<span id="cache"></span>
 		</div>
 

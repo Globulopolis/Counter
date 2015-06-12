@@ -13,61 +13,82 @@ use Piwik\Access;
 use Piwik\API\Request;
 use Piwik\Common;
 use Piwik\Db;
-use Piwik\Log;
 use Piwik\Piwik;
+use Piwik\Plugin\Manager as Manager;
 use Piwik\Plugins\SitesManager\API as SitesManager;
 use Zend_Cache;
 
-define('DS', DIRECTORY_SEPARATOR);
-
 // I don't know if Zend_Cache is available so I include it. Need some tests.
-require_once PIWIK_INCLUDE_PATH.DS.'libs'.DS.'Zend'.DS.'Cache.php';
+require_once PIWIK_INCLUDE_PATH.DIRECTORY_SEPARATOR.'libs'.DIRECTORY_SEPARATOR.'Zend'.DIRECTORY_SEPARATOR.'Cache.php';
 
 class API extends \Piwik\Plugin\API {
-	static private $instance = null;
+	/**
+	 * Method to get a list of counters.
+	 *
+	 * @return  array
+	 */
+	public function getItems() {
+		$result = $this->getModel()->getItems();
 
-	static public function getInstance() {
-		if (self::$instance == null) {
-			self::$instance = new self;
+		return $result;
+	}
+
+	/**
+	 * Method to get a list of sites.
+	 *
+	 * @return  array
+	 */
+	public function getSitesList() {
+		$result = $this->getModel()->getSitesList();
+
+		return $result;
+	}
+
+	/**
+	 * Method to change the published state of one or more records.
+	 *
+	 * @param   array    $ids    A list of the primary keys to change.
+	 * @param   integer  $state  The value of the published state.
+	 *
+	 * @return  boolean  True on success.
+	 * @throws  Exception
+	 */
+	public function publish($ids, $state) {
+		if (empty($ids)) {
+			return false;
 		}
 
-		return self::$instance;
+		// TODO Implement array checking
+		//$this->api->checkAccess();
+
+		$this->getModel()->publish($ids, $state);
+
+		return true;
 	}
 
-	public function getPluginInfo() {
-		$pluginManager = \Piwik\Plugin\Manager::getInstance();
-		$plugins = $pluginManager->loadAllPluginsAndGetTheirInfo();
+	/**
+	 * Remove counter(s) from DB
+	 *
+	 * @param    array    $ids   Counter ID
+	 *
+	 * @return   boolean  True on success.
+	 * @throws  Exception
+	 */
+	public function remove($ids) {
+		if (empty($ids)) {
+			return false;
+		}
 
-		return $plugins['Counter'];
+		// TODO Implement array checking
+		//$this->api->checkAccess();
+
+		$this->clearCache($ids);
+		$this->getModel()->remove($ids);
+
+		return true;
 	}
 
-	private function rgb2array($rgb) {
-		$rgb = str_replace('#', '', $rgb);
-
-		return array(
-			'r'=>base_convert(substr($rgb, 0, 2), 16, 10),
-			'g'=>base_convert(substr($rgb, 2, 2), 16, 10),
-			'b'=>base_convert(substr($rgb, 4, 2), 16, 10),
-		);
-	}
-
-	public function publish($id, $state) {
-		if ($id == 0) return false;
-
-		// true for unpublish
-		$_state = ($state === true) ? 0 : 1;
-		$result = Db::exec("UPDATE `".Common::prefixTable('counter_sites')."` SET `published` = '".(int)$_state."' WHERE `id` = ".(int)$id);
-
-		return $result;
-	}
-
-	public function getSitesList() {
-		$result = Db::fetchAll("SELECT `idsite`, `name` FROM `".Common::prefixTable('site')."` ORDER BY `idsite` ASC");
-
-		return $result;
-	}
-
-	public function siteidPrecheck($idsite) {
+	/*public function siteidPrecheck($idsite) {
 		$query_result = Db::fetchOne("SELECT COUNT(`id`) FROM `".Common::prefixTable('counter_sites')."` WHERE `idsite` = ".(int)$idsite);
 
 		if ($query_result != 0) {
@@ -129,7 +150,6 @@ class API extends \Piwik\Plugin\API {
 
 		if ($siteid == 0) {
 			return false;
-			exit();
 		}
 
 		if ($id == 0) {
@@ -156,24 +176,6 @@ class API extends \Piwik\Plugin\API {
 	}
 
 	/**
-	 * Remove counter from DB
-	 *
-	 * @param   bool  $id		Counter ID
-	 *
-	 * @return	json	string
-	 */
-	public function remove($id) {
-		$success = 0;
-
-		if (!empty($id)) {
-			Db::exec("DELETE FROM `".Common::prefixTable('counter_sites')."` WHERE `id` = ".(int)$id);
-			$success = 1;
-		}
-
-		return json_encode(array('success'=>$success));
-	}
-
-	/**
 	 * Get data for one counter or list of counters
 	 *
 	 * @param   bool  $id		False - get data for all counters
@@ -185,7 +187,7 @@ class API extends \Piwik\Plugin\API {
 
 		// if false - retrieve data for all sites
 		if ($id === false) {
-			$sites = SitesManager::getInstance()->getSitesIdWithAdminAccess();
+			/*$sites = SitesManager::getInstance()->getSitesIdWithAdminAccess();
 			$query = Db::fetchAll("SELECT `id`, `idsite`, `title`, `params`, `published`"
 				. "\n FROM `".Common::prefixTable('counter_sites')."`"
 				. "\n WHERE `idsite` IN (".implode(',', $sites).")"
@@ -199,7 +201,7 @@ class API extends \Piwik\Plugin\API {
 					$result[$key]['title'] = $row['title'];
 					$result[$key]['published'] = $row['published'];
 				}
-			}
+			}*/
 		} else {
 			$row = Db::fetchRow("SELECT `id`, `idsite`, `title`, `params`, `published` FROM `".Common::prefixTable('counter_sites')."` WHERE `id` = ".$id);
 
@@ -440,7 +442,7 @@ class API extends \Piwik\Plugin\API {
 	/**
 	 * Show image from cache or create a new one
 	 *
-	 * @return image binary
+	 * @return   mixed
 	 */
 	public function showImage() {
 		$id = Common::getRequestVar('id', 0, 'int');
@@ -467,7 +469,7 @@ class API extends \Piwik\Plugin\API {
 					'automatic_serialization' => false
 				),
 				array(
-					'cache_dir'=>PIWIK_DOCUMENT_ROOT.DS.'tmp'.DS.'cache'.DS
+					'cache_dir'=>PIWIK_DOCUMENT_ROOT.DIRECTORY_SEPARATOR.'tmp'.DIRECTORY_SEPARATOR.'cache'.DIRECTORY_SEPARATOR
 				)
 			);
 
@@ -493,7 +495,7 @@ class API extends \Piwik\Plugin\API {
 	/**
 	 * Create image for preview while editing counter data. For backend only
 	 *
-	 * @return image binary
+	 * @return   mixed
 	 */
 	public function previewImage() {
 		$params = array(
@@ -529,9 +531,14 @@ class API extends \Piwik\Plugin\API {
 		);
 
 		@set_time_limit(0);
-		echo $this->createImage($params);
+		$this->createImage($params);
 	}
 
+	/**
+	 * Method to get live visitors count
+	 *
+	 * @return	string
+	 */
 	public function getLiveVisitorsCount() {
 		$type = Common::getRequestVar('type', '', 'string');
 		$id = Common::getRequestVar('id', 0, 'int');
@@ -713,16 +720,17 @@ class API extends \Piwik\Plugin\API {
 	/**
 	 * Clear cache for custom counter
 	 *
-	 * @return json string
+	 * @param    array  $ids   Array of IDs
+	 *
+	 * @return   string
 	 */
-	public function clearCache() {
+	public function clearCache($ids) {
 		$id = Common::getRequestVar('id', 0, 'int');
 		$cache_id = 'counter_image_'.md5($id).'_'.$id;
-		$lifetime = Common::getRequestVar('lifetime', 0, 'int');
 		$cache = Zend_Cache::factory('Output', 'File',
 			array(),
 			array(
-				'cache_dir'=>PIWIK_DOCUMENT_ROOT.DS.'tmp'.DS.'cache'.DS
+				'cache_dir'=>PIWIK_DOCUMENT_ROOT.DIRECTORY_SEPARATOR.'tmp'.DIRECTORY_SEPARATOR.'cache'.DIRECTORY_SEPARATOR
 			)
 		);
 		$success = 0;
@@ -732,6 +740,12 @@ class API extends \Piwik\Plugin\API {
 		}
 
 		return json_encode(array('success'=>$success));
+	}
+
+	public function getPluginInfo() {
+		$plugins = Manager::getInstance()->loadAllPluginsAndGetTheirInfo();
+
+		return $plugins['Counter'];
 	}
 
 	/**
@@ -768,5 +782,19 @@ class API extends \Piwik\Plugin\API {
 		}
 
 		return $mime;
+	}
+
+	private function rgb2array($rgb) {
+		$rgb = str_replace('#', '', $rgb);
+
+		return array(
+			'r'=>base_convert(substr($rgb, 0, 2), 16, 10),
+			'g'=>base_convert(substr($rgb, 2, 2), 16, 10),
+			'b'=>base_convert(substr($rgb, 4, 2), 16, 10),
+		);
+	}
+
+	private function getModel() {
+		return new Model();
 	}
 }

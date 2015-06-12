@@ -12,9 +12,6 @@ namespace Piwik\Plugins\Counter;
 use Exception;
 use Piwik\Common;
 use Piwik\Db;
-use Piwik\Menu\MenuAdmin;
-use Piwik\Menu\MenuTop;
-use Piwik\Piwik;
 
 class Counter extends \Piwik\Plugin {
 	// This function needed if table for Counter plugin doesn't exists. E.g. we install plugin via copying into plugins folder.

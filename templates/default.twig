@@ -7,12 +7,42 @@
 </style>
 <script type="text/javascript" src="plugins/Counter/assets/js/ui.aurora.min.js"></script>
 <script type="text/javascript">
-<!--
+	function submitform(task) {
+		var form = document.getElementById('countersForm');
+
+		if (typeof(task) !== 'undefined' && task !== "") {
+			form.action.value = task;
+		}
+		if (typeof form.onsubmit == 'function') {
+			form.onsubmit();
+		}
+		if (typeof form.fireEvent == "function") {
+			form.fireEvent('onsubmit');
+		}
+		if (typeof jQuery == "function") {
+			jQuery(form).submit();
+		}
+		form.submit();
+	}
+
 	jQuery(document).ready(function($){
+		$('#checkAll').change(function(){
+			if (this.form) {
+				var chk = $(':checkbox', this.form);
+
+				if (this.checked) {
+					chk.attr('checked', 'checked').closest('.form-checkbox').addClass('checked');
+				} else {
+					chk.removeAttr('checked').closest('.form-checkbox').removeClass('checked');
+				}
+			}
+		});
+
 		$('.deleteSite').click(function(e){
 			e.preventDefault();
+
 			var _this = $(this),
-				dlg = $('<div style="display: none;" class="dialog" title="{{ 'Counter_Remove_title'|translate }}"><p>{{ 'Counter_Remove'|translate }}</p></div>').appendTo('body');
+				dlg = $('#dialog_remove').appendTo('body');
 
 			dlg.dialog({
 				buttons: {
@@ -44,44 +74,59 @@
 			});
 		});
 	});
-// -->
 </script>
+
 <div class="counters-list">
-	<h2>{{ 'Counter_Page_main'|translate }}</h2>
-	<div class="addRowCounter"><a href="index.php?module=Counter&action=add&idSite={{ idSite }}&period={{ period }}&date={{ date }}" class="btn btn-primary">{{ 'Counter_Add'|translate }}</a></div><br />
-	{{ 'Counter_Page_main_desc'|translate }}
+	<form action="index.php" method="post" id="countersForm">
+		<h2>{{ 'Counter_Page_main'|translate }}</h2>
+		<div class="addRowCounter">
+			<a href="index.php?module=Counter&action=add&idSite={{ idSite }}&period={{ period }}&date={{ date }}" class="btn btn-primary">{{ 'Counter_Add'|translate }}</a>
+			<button class="btn btn-primary" onclick="submitform('publish');">{{ 'Counter_Publish'|translate }}</button>
+			<button class="btn btn-primary" onclick="submitform('unpublish');">{{ 'Counter_Unpublish'|translate }}</button>
+			<button class="btn btn-primary" onclick="submitform('remove');">{{ 'Counter_Remove'|translate }}</button>
+			<button class="btn btn-primary" onclick="submitform('clear_cache');">{{ 'Counter_Params_cache_clear'|translate }}</button>
+		</div>
+		<br />
 
-	<table width="100%" border="0" class="entityTable dataTable">
-		<thead>
-			<tr>
-				<th>{{ 'Counter_Sitename'|translate }}</th>
-				<th style="text-align: center;">{{ 'Counter_Status'|translate }}</th>
-				<th>{{ 'Counter_Id'|translate }}</th>
-			</tr>
-		</thead>
-		<tbody>
-			{% for data in counters %}
-			<tr>
-				<td>
-					<strong><a href="index.php?module=Counter&action=edit&id={{ data.id }}&idSite={{ idSite }}&period={{ period }}&date={{ date }}" title="{{ 'Counter_Edit_title'|translate }}">{% if data.title == '' %}{{ 'Counter_Sitename_nositename'|translate }}{% else %}{{ data.title }}{% endif %}</a></strong>
-					<div class="c-code">{{ 'Counter_Code'|translate }}&lt;img src="{{ server_vars.protocol }}{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=show&{% if data.params.start_date == '' and data.params.start_date_period == 'none' %}date=2010-01-01&{% endif %}id={{ data.id }}" border="0" /&gt;</div>
-					<div class="c-code-live">{{ 'Counter_Code_live'|translate }}&lt;script type="text/javascript" src="{{ server_vars.protocol }}{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=live&id={{ data.id }}&type=js"&gt;&lt;/script&gt;</div>
-				</td>
-				<td width="5%" valign="top">
-					{% if data.published == 1 %}
-						<a href="index.php?module=Counter&action=unpublish&id={{ data.id }}" title="{{ 'Counter_Unpublish'|translate }}" class="publish_y"></a>
-					{% else %}
-						<a href="index.php?module=Counter&action=publish&id={{ data.id }}" title="{{ 'Counter_Publish'|translate }}" class="publish_n"></a>
-					{% endif %}
-					<a href="index.php?module=Counter&action=remove&id={{ data.id }}" title="{{ 'Counter_Delete_title'|translate }}" class="deleteSite"></a>
-				</td>
-				<td width="5%" valign="top"><a href="index.php?module=SitesManager&action=index&idSite={{ idSite }}&period={{ period }}&date={{ date }}">{{ data.idsite }}</a> | {{ data.id }}</td>
-			</tr>
-			{% endfor %}
-		</tbody>
-	</table>
+		<table width="100%" border="0" class="entityTable dataTable">
+			<thead>
+				<tr>
+					<th><input type="checkbox" name="checkall-toggle" id="checkAll" /></th>
+					<th>{{ 'Counter_Sitename'|translate }}</th>
+					<th>&nbsp;</th>
+					<th>{{ 'Counter_Id'|translate }}</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for data in counters %}
+				<tr>
+					<td>
+						<input type="checkbox" name="id[]" value="{{ data.id }}" />
+					</td>
+					<td>
+						<strong><a href="index.php?module=Counter&action=edit&id={{ data.id }}&idSite={{ idSite }}&period={{ period }}&date={{ date }}" title="{{ 'Counter_Edit_title'|translate }}">{% if data.title == '' %}{{ 'Counter_Sitename_nositename'|translate }}{% else %}{{ data.title }}{% endif %}</a></strong>
+						<div class="c-code">{{ 'Counter_Code'|translate }}&lt;img src="{{ server_vars.protocol }}{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=show&{% if data.params.start_date == '' and data.params.start_date_period == 'none' %}date=2010-01-01&{% endif %}id={{ data.id }}" border="0" /&gt;</div>
+						<div class="c-code-live">{{ 'Counter_Code_live'|translate }}&lt;script type="text/javascript" src="{{ server_vars.protocol }}{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=live&id={{ data.id }}&type=js"&gt;&lt;/script&gt;</div>
+					</td>
+					<td width="5%" valign="top">
+						{% if data.published == 1 %}
+							<a href="index.php?module=Counter&action=unpublish&id[]={{ data.id }}" title="{{ 'Counter_Unpublished'|translate }}" class="publish_y"></a>
+						{% else %}
+							<a href="index.php?module=Counter&action=publish&id[]={{ data.id }}" title="{{ 'Counter_Published'|translate }}" class="publish_n"></a>
+						{% endif %}
+						<a href="index.php?module=Counter&action=remove&id=[]{{ data.id }}" title="{{ 'Counter_Delete_title'|translate }}" class="deleteSite"></a>
+					</td>
+					<td width="5%" valign="top"><a href="index.php?module=SitesManager&action=index&idSite={{ idSite }}&period={{ period }}&date={{ date }}">{{ data.idsite }}</a> | {{ data.id }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
 
-	<br /><div class="addRowCounter"><a href="index.php?module=Counter&action=add&idSite={{ idSite }}&period={{ period }}&date={{ date }}" class="btn btn-primary">{{ 'Counter_Add'|translate }}</a></div>
+		<div style="display: none;" id="dialog_remove" class="dialog" title="{{ 'Counter_Remove_title'|translate }}"><p>{{ 'Counter_Remove_desc'|translate }}</p></div>
+
+		<input type="hidden" name="module" value="Counter" />
+		<input type="hidden" name="action" value="" />
+	</form>
 </div>
 
 {% include '@Counter/default_footer.twig' %}
