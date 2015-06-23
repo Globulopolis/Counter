@@ -1,28 +1,37 @@
 {% extends "admin.twig" %}
-{% block notification %}{% endblock %}
 {% block content %}
 
-<style type="text/css" media="all">
-	@import url("plugins/Counter/assets/css/style.css");
-</style>
-<script type="text/javascript" src="plugins/Counter/assets/js/ui.aurora.min.js"></script>
 <script type="text/javascript">
 	function submitform(task) {
 		var form = document.getElementById('countersForm');
 
-		if (typeof(task) !== 'undefined' && task !== "") {
-			form.action.value = task;
+		if (jQuery('.id-chk').filter(':checked').length == 0) {
+			jQuery('.addRowCounter').aurora({
+				text: '{{ 'Counter_List_make_selection'|translate }}',
+				leave_only_first: true,
+				container: 'ui-state-error',
+				icon: 'ui-icon-alert',
+				placement: 'after',
+				button: 'close',
+				button_title: '[{{ 'General_Close'|translate }}]'
+			});
+
+			return false;
+		} else {
+			if (typeof(task) !== 'undefined' && task !== "") {
+				form.action.value = task;
+			}
+			if (typeof form.onsubmit == 'function') {
+				form.onsubmit();
+			}
+			if (typeof form.fireEvent == "function") {
+				form.fireEvent('onsubmit');
+			}
+			if (typeof jQuery == "function") {
+				jQuery(form).submit();
+			}
+			form.submit();
 		}
-		if (typeof form.onsubmit == 'function') {
-			form.onsubmit();
-		}
-		if (typeof form.fireEvent == "function") {
-			form.fireEvent('onsubmit');
-		}
-		if (typeof jQuery == "function") {
-			jQuery(form).submit();
-		}
-		form.submit();
 	}
 
 	jQuery(document).ready(function($){
@@ -38,11 +47,11 @@
 			}
 		});
 
-		$('.deleteSite').click(function(e){
+		$('.delete-counter').click(function(e){
 			e.preventDefault();
 
 			var _this = $(this),
-				dlg = $('#dialog_remove').appendTo('body');
+				dlg = $('#dialog_remove');
 
 			dlg.dialog({
 				buttons: {
@@ -73,6 +82,8 @@
 				width: 420
 			});
 		});
+
+		$('.hasTooltip').tooltip({track:true,show:false,hide:false});
 	});
 </script>
 
@@ -81,45 +92,51 @@
 		<h2>{{ 'Counter_Page_main'|translate }}</h2>
 		<div class="addRowCounter">
 			<a href="index.php?module=Counter&action=add&idSite={{ idSite }}&period={{ period }}&date={{ date }}" class="btn btn-primary">{{ 'Counter_Add'|translate }}</a>
-			<button class="btn btn-primary" onclick="submitform('publish');">{{ 'Counter_Publish'|translate }}</button>
-			<button class="btn btn-primary" onclick="submitform('unpublish');">{{ 'Counter_Unpublish'|translate }}</button>
-			<button class="btn btn-primary" onclick="submitform('remove');">{{ 'Counter_Remove'|translate }}</button>
-			<button class="btn btn-primary" onclick="submitform('clear_cache');">{{ 'Counter_Params_cache_clear'|translate }}</button>
+			<button class="btn btn-primary" onclick="submitform('publish'); return false;">{{ 'Counter_Publish'|translate }}</button>
+			<button class="btn btn-primary" onclick="submitform('unpublish'); return false;">{{ 'Counter_Unpublish'|translate }}</button>
+			<button class="btn btn-primary" onclick="submitform('remove'); return false;">{{ 'Counter_Remove'|translate }}</button>
+			<button class="btn btn-primary" onclick="submitform('clearCache'); return false;">{{ 'Counter_Params_cache_clear'|translate }}</button>
 		</div>
 		<br />
 
 		<table width="100%" border="0" class="entityTable dataTable">
 			<thead>
 				<tr>
-					<th><input type="checkbox" name="checkall-toggle" id="checkAll" /></th>
+					<th width="1%"><input type="checkbox" name="checkall-toggle" id="checkAll" /></th>
 					<th>{{ 'Counter_Sitename'|translate }}</th>
-					<th>&nbsp;</th>
-					<th>{{ 'Counter_Id'|translate }}</th>
+					<th width="5%">&nbsp;</th>
+					<th width="5%">{{ 'Counter_Id'|translate }}</th>
 				</tr>
 			</thead>
+			{% if counters|length == 0 %}
+			<tbody>
+				<tr><td colspan="4">{{ 'Counter_No_items'|translate }}</td></tr>
+			</tbody>
+			{% else %}
 			<tbody>
 				{% for data in counters %}
 				<tr>
 					<td>
-						<input type="checkbox" name="id[]" value="{{ data.id }}" />
+						<input type="checkbox" name="id[]" value="{{ data.id }}" class="id-chk" />
 					</td>
 					<td>
-						<strong><a href="index.php?module=Counter&action=edit&id={{ data.id }}&idSite={{ idSite }}&period={{ period }}&date={{ date }}" title="{{ 'Counter_Edit_title'|translate }}">{% if data.title == '' %}{{ 'Counter_Sitename_nositename'|translate }}{% else %}{{ data.title }}{% endif %}</a></strong>
+						<strong><a href="index.php?module=Counter&action=edit&id[]={{ data.id }}&idSite={{ idSite }}&period={{ period }}&date={{ date }}" title="{{ 'Counter_Edit_title'|translate }}">{% if data.title == '' %}{{ 'Counter_Sitename_nositename'|translate }}{% else %}{{ data.title }}{% endif %}</a></strong>
 						<div class="c-code">{{ 'Counter_Code'|translate }}&lt;img src="{{ server_vars.protocol }}{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=show&{% if data.params.start_date == '' and data.params.start_date_period == 'none' %}date=2010-01-01&{% endif %}id={{ data.id }}" border="0" /&gt;</div>
 						<div class="c-code-live">{{ 'Counter_Code_live'|translate }}&lt;script type="text/javascript" src="{{ server_vars.protocol }}{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=live&id={{ data.id }}&type=js"&gt;&lt;/script&gt;</div>
 					</td>
-					<td width="5%" valign="top">
+					<td valign="top" nowrap="nowrap">
 						{% if data.published == 1 %}
-							<a href="index.php?module=Counter&action=unpublish&id[]={{ data.id }}" title="{{ 'Counter_Unpublished'|translate }}" class="publish_y"></a>
+							<a href="index.php?module=Counter&action=unpublish&id[]={{ data.id }}" title="{{ 'Counter_Unpublished'|translate }}" class="hasTooltip publish_y"></a>
 						{% else %}
-							<a href="index.php?module=Counter&action=publish&id[]={{ data.id }}" title="{{ 'Counter_Published'|translate }}" class="publish_n"></a>
+							<a href="index.php?module=Counter&action=publish&id[]={{ data.id }}" title="{{ 'Counter_Published'|translate }}" class="hasTooltip publish_n"></a>
 						{% endif %}
-						<a href="index.php?module=Counter&action=remove&id=[]{{ data.id }}" title="{{ 'Counter_Delete_title'|translate }}" class="deleteSite"></a>
+						<a href="index.php?module=Counter&action=remove&id[]={{ data.id }}&format=JSON" title="{{ 'Counter_Delete_title'|translate }}" class="hasTooltip delete-counter"></a>
 					</td>
-					<td width="5%" valign="top"><a href="index.php?module=SitesManager&action=index&idSite={{ idSite }}&period={{ period }}&date={{ date }}">{{ data.idsite }}</a> | {{ data.id }}</td>
+					<td valign="top"><a href="index.php?module=SitesManager&action=index&idSite={{ idSite }}&period={{ period }}&date={{ date }}">{{ data.idsite }}</a> | {{ data.id }}</td>
 				</tr>
 				{% endfor %}
 			</tbody>
+			{% endif %}
 		</table>
 
 		<div style="display: none;" id="dialog_remove" class="dialog" title="{{ 'Counter_Remove_title'|translate }}"><p>{{ 'Counter_Remove_desc'|translate }}</p></div>

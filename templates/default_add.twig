@@ -3,13 +3,8 @@
 
 {% block content %}
 
-<style type="text/css" media="all">
-	@import url("plugins/Counter/assets/css/style.css");
-</style>
 <script type="text/javascript" src="plugins/Counter/assets/js/minicolors.min.js"></script>
-<script type="text/javascript" src="plugins/Counter/assets/js/ui.aurora.min.js"></script>
 <script type="text/javascript">
-<!--
 	jQuery(document).ready(function($){
 		$('.color-picker').each(function(){
 			$(this).minicolors({
@@ -29,7 +24,7 @@
 			elem.removeClass('input-green input-red');
 
 			if (elem.val() != '') {
-				$.getJSON('index.php?module=Counter&action=checkpath', {'path':  elem.val()}, function(response){
+				$.getJSON('index.php?module=Counter&action=checkpath&format=JSON', {'path':  elem.val()}, function(response){
 					if (response.success == 1) {
 						elem.addClass('input-green');
 					} else {
@@ -60,7 +55,11 @@
 			if (this.value != 0) {
 				$('#start_date').val('');
 				_this.attr('disabled', true);
-				$.getJSON('index.php?module=Counter&action=siteidPrecheck&idsite='+this.value, function(response){
+				$.ajax({
+					url: 'index.php?module=Counter&action=counter_exists&idsite='+this.value+'&format=JSON',
+					cache: false,
+					dataType: 'json'
+				}).done(function(response){
 					if (response.success == 0) {
 						$('span.check-state').aurora({
 							text: '{{ 'Counter_Counter_exists'|translate }}',
@@ -68,6 +67,8 @@
 							container: 'ui-state-error',
 							icon: 'ui-icon-alert',
 							placement: 'prepend',
+							button: 'close',
+							button_title: '[{{ 'General_Close'|translate }}]',
 							onComplete: function(){
 								_this.attr('disabled', false);
 							}
@@ -82,6 +83,16 @@
 						_this.attr('disabled', false);
 						$('body').aurora.destroy({ indexes:'all' });
 					}
+				}).fail(function(jqxhr, textStatus, error){
+					$('span.check-state').aurora({
+						text: '{{ 'Counter_Error_has_occurred'|translate }}',
+						leave_only_first: true,
+						container: 'ui-state-error',
+						icon: 'ui-icon-alert',
+						placement: 'prepend',
+						button: 'close',
+						button_title: '[{{ 'General_Close'|translate }}]'
+					});
 				});
 			} else {
 				$('.save, .apply').prop('disabled', 'disabled');
@@ -110,12 +121,12 @@
 			$('#adminForm').submit();
 		});
 	});
-// -->
 </script>
+
 <div>
 	<h2><a href="index.php?module=Counter&action=index&idSite=1&period=day&date=yesterday">{{ 'Counter_Page_main'|translate }}</a> &bull; {{ 'Counter_Add'|translate }}</h2>
 	<form action="index.php" method="post" id="adminForm" autocomplete="off">
-		<p class="ng-binding"><label for="site">{{ 'Counter_Params_site'|translate }}</label></p>
+		<p class="ng-binding"><label for="idsite">{{ 'Counter_Params_site'|translate }}</label></p>
 		<div class="form-group">
 			<div class="ng-scope">
 				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_site_desc'|translate|raw }}</div>
@@ -135,6 +146,40 @@
 				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_sitename_desc'|translate }}</div>
 			</div>
 			<input type="text" name="title" id="title" size="70" maxlength="50" required />
+		</div>
+
+		<p class="ng-binding"><label for="start_date">{{ 'Counter_Params_datestart'|translate }}</label></p>
+		<div class="form-group start_date">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_datestart_desc'|translate|raw }}</div>
+			</div>
+			<a name="date_global"></a>
+			<input type="text" name="start_date" value="" id="start_date" size="11" maxlength="10" />
+			<label for="start_date_period">{{ 'Counter_Params_datestart_period'|translate }}</label>
+			<select name="start_date_period" id="start_date_period">
+				<option value="none">-</option>
+				<option value="day">{{ 'CoreHome_PeriodDay'|translate }}</option>
+				<option value="yesterday">{{ 'General_Yesterday'|translate }}</option>
+				<option value="week">{{ 'CoreHome_PeriodWeek'|translate }}</option>
+				<option value="month">{{ 'CoreHome_PeriodMonth'|translate }}</option>
+				<option value="year">{{ 'CoreHome_PeriodYear'|translate }}</option>
+			</select>
+		</div>
+
+		<p class="ng-binding"><label for="visits">{{ 'Counter_Params_visits_label'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visits_desc'|translate }}</div>
+			</div>
+			<input type="text" name="visits" value="0" id="visits" size="70" maxlength="50" required />
+		</div>
+
+		<p class="ng-binding"><label for="views">{{ 'Counter_Params_views_label'|translate }}</label></p>
+		<div class="form-group">
+			<div class="ng-scope">
+				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_views_desc'|translate }}</div>
+			</div>
+			<input type="text" name="views" value="0" id="views" size="70" maxlength="50" required />
 		</div>
 
 		<p class="ng-binding"><label for="pub">{{ 'Counter_Params_publish'|translate }}</label></p>
@@ -310,26 +355,8 @@
 			</div>
 			<div class="input-group">
 				<input type="text" name="cache_time" value="900" id="cache_time" size="7" maxlength="7" required />
-				<span class="input-group-addon"> {{ 'Counter_Params_seconds'|translate }}</span>
+				<span class="input-group-addon"> {{ 'Counter_Seconds'|translate }}</span>
 			</div>
-		</div>
-
-		<p class="ng-binding"><label for="start_date">{{ 'Counter_Params_datestart'|translate }}</label></p>
-		<div class="form-group">
-			<div class="ng-scope">
-				<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_datestart_desc'|translate|raw }}</div>
-			</div>
-			<a name="date_global"></a>
-			<input type="text" name="start_date" value="" id="start_date" size="11" maxlength="10" />
-			<label for="start_date_period">{{ 'Counter_Params_datestart_period'|translate }}</label>
-			<select name="start_date_period" id="start_date_period">
-				<option value="none">-</option>
-				<option value="day">{{ 'CoreHome_PeriodDay'|translate }}</option>
-				<option value="yesterday">{{ 'General_Yesterday'|translate }}</option>
-				<option value="week">{{ 'CoreHome_PeriodWeek'|translate }}</option>
-				<option value="month">{{ 'CoreHome_PeriodMonth'|translate }}</option>
-				<option value="year">{{ 'CoreHome_PeriodYear'|translate }}</option>
-			</select>
 		</div>
 
 		<p class="ng-binding"><label for="token">{{ 'Counter_Params_token_auth'|translate }}</label></p>
@@ -346,7 +373,7 @@
 		<div class="form-group">
 			<div class="input-group">
 				<input type="text" name="last_minutes" value="30" id="last_minutes" size="4" maxlength="3" />
-				<span class="input-group-addon"> minutes</span>
+				<span class="input-group-addon"> {{ 'Counter_Minutes'|translate }}</span>
 			</div>
 		</div>
 
@@ -357,7 +384,7 @@
 			</div>
 			<div class="input-group">
 				<input type="text" name="check_interval" value="10000" id="check_interval" size="7" maxlength="6" />
-				<span class="input-group-addon"> msec</span>
+				<span class="input-group-addon"> {{ 'Counter_Mseconds'|translate }}</span>
 			</div>
 		</div>
 
