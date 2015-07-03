@@ -54,7 +54,7 @@
 
 			if (this.value != 0 && this.value != {{ data.idsite }}) {
 				$.ajax({
-					url: 'index.php?module=Counter&action=counter_exists&idsite='+this.value+'&format=JSON',
+					url: 'index.php?module=Counter&action=counterExists&idsite='+this.value+'&format=JSON',
 					cache: false,
 					dataType: 'json'
 				}).done(function(response){

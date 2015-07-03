@@ -138,9 +138,9 @@ class Controller extends Plugin\Controller {
 		$this->redirectToIndex('Counter', 'index');
 	}
 
-	public function counter_exists() {
+	public function counterExists() {
 		Json::sendHeaderJSON();
-		echo $this->api->counter_exists(Common::getRequestVar('idsite', 0, 'int'));
+		echo $this->api->counterExists(Common::getRequestVar('idsite', 0, 'int'));
 	}
 
 	public function add() {

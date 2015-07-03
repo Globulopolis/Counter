@@ -33,6 +33,24 @@ class Counter extends Plugin {
 	// This function needed if table for Counter plugin doesn't exists. E.g. we install plugin via copying into plugins folder.
 	public function activate() {
 		$this->install();
+		$this->update();
+	}
+
+	public function update() {
+		try {
+			$query = "ALTER TABLE `".Common::prefixTable('counter_sites')."`"
+				. " ADD COLUMN `visits` INT (11) DEFAULT 0 NOT NULL AFTER `params`,"
+				. " ADD COLUMN `views` INT (11) DEFAULT 0 NOT NULL AFTER `visits`,"
+				. " ADD INDEX `idx_idsite` (`idsite`),"
+				. " ADD INDEX `idx_state` (`published`)";
+
+			Db::exec($query);
+
+		} catch (Exception $e) {
+			if (!Db::get()->isErrNo($e, '1050')) {
+				throw $e;
+			}
+		}
 	}
 
 	public function install() {

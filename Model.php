@@ -177,7 +177,7 @@ class Model {
 		return $result;
 	}
 
-	public function counter_exists($idsite) {
+	public function counterExists($idsite) {
 		$total = Db::fetchOne("SELECT COUNT(id) FROM ".$this->table." WHERE idsite = ".(int)$idsite);
 
 		if ($total > 0) {

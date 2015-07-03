@@ -115,12 +115,12 @@ class API extends \Piwik\Plugin\API {
 	 *
 	 * @return   string
 	 */
-	public function counter_exists($idsite) {
+	public function counterExists($idsite) {
 		if (empty($idsite)) {
 			return json_encode(array('success' => 0));
 		}
 
-		$result = $this->getModel()->counter_exists($idsite);
+		$result = $this->getModel()->counterExists($idsite);
 
 		return json_encode($result);
 	}
