@@ -2,7 +2,7 @@
 /**
  * @package		Piwik.Counter.API
  * @copyright	Copyright (C) 2010 Libra.ms. All rights reserved.
- * @license		GNU General Public License version 2 or later
+ * @license		GNU General Public License version 3 or later
  * @url			http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
  * @url			http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
  */
@@ -13,248 +13,210 @@ use Piwik\Access;
 use Piwik\API\Request;
 use Piwik\Common;
 use Piwik\Db;
-use Piwik\Log;
+use Piwik\Notification;
 use Piwik\Piwik;
+use Piwik\Plugin\Manager as Manager;
 use Piwik\Plugins\SitesManager\API as SitesManager;
 use Zend_Cache;
 
-define('DS', DIRECTORY_SEPARATOR);
-
-// I don't know if Zend_Cache is available so I include it. Need some tests.
-require_once PIWIK_INCLUDE_PATH.DS.'libs'.DS.'Zend'.DS.'Cache.php';
-
+/**
+ * Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text via ajax requests.
+ */
 class API extends \Piwik\Plugin\API {
-	static private $instance = null;
-
-	static public function getInstance() {
-		if (self::$instance == null) {
-			self::$instance = new self;
-		}
-
-		return self::$instance;
-	}
-
-	public function getPluginInfo() {
-		$pluginManager = \Piwik\Plugin\Manager::getInstance();
-		$plugins = $pluginManager->loadAllPluginsAndGetTheirInfo();
-
-		return $plugins['Counter'];
-	}
-
-	private function rgb2array($rgb) {
-		$rgb = str_replace('#', '', $rgb);
-
-		return array(
-			'r'=>base_convert(substr($rgb, 0, 2), 16, 10),
-			'g'=>base_convert(substr($rgb, 2, 2), 16, 10),
-			'b'=>base_convert(substr($rgb, 4, 2), 16, 10),
-		);
-	}
-
-	public function publish($id, $state) {
-		if ($id == 0) return false;
-
-		// true for unpublish
-		$_state = ($state === true) ? 0 : 1;
-		$result = Db::exec("UPDATE `".Common::prefixTable('counter_sites')."` SET `published` = '".(int)$_state."' WHERE `id` = ".(int)$id);
+	/**
+	 * Method to get a list of counters.
+	 *
+	 * @return  array
+	 */
+	public function getItems() {
+		$result = $this->getModel()->getItems();
 
 		return $result;
 	}
 
+	/**
+	 * Method to get a counter data.
+	 *
+	 * @return  mixed  Array on success, false otherwise
+	 */
+	public function getItem() {
+		$id = Common::getRequestVar('id', array(), 'array');
+
+		if (empty($id)) {
+			$id[] = Common::getRequestVar('id', 0, 'int');
+
+			if (empty($id)) {
+				return false;
+			}
+		}
+
+		$this->checkAccess();
+
+		$result = $this->getModel()->getItem($id);
+
+		return $result;
+	}
+
+	/**
+	 * Method to get a list of sites.
+	 *
+	 * @return  array
+	 */
 	public function getSitesList() {
-		$result = Db::fetchAll("SELECT `idsite`, `name` FROM `".Common::prefixTable('site')."` ORDER BY `idsite` ASC");
+		$result = $this->getModel()->getSitesList();
 
 		return $result;
 	}
 
-	public function siteidPrecheck($idsite) {
-		$query_result = Db::fetchOne("SELECT COUNT(`id`) FROM `".Common::prefixTable('counter_sites')."` WHERE `idsite` = ".(int)$idsite);
-
-		if ($query_result != 0) {
-			// Counter for this site is allready exists
-			$result = array('success'=>0);
-		} else {
-			$ts_created = Db::fetchOne("SELECT DATE_FORMAT(`ts_created`, '%Y-%m-%d') AS `ts_created` FROM `".Common::prefixTable('site')."` WHERE `idsite` = ".(int)$idsite);
-			$result = array('success'=>1, 'ts_created'=>$ts_created);
+	/**
+	 * Method to change the published state of one or more records.
+	 *
+	 * @param   array    $ids    A list of the primary keys to change.
+	 * @param   integer  $state  The value of the published state.
+	 *
+	 * @return  boolean  True on success.
+	 */
+	public function publish($ids, $state=1) {
+		if (empty($ids)) {
+			return false;
 		}
+
+		$this->checkAccess();
+
+		$result = $this->getModel()->publish($ids, $state);
+
+		return $result;
+	}
+
+	/**
+	 * Remove counter(s) from DB and clear the image cache.
+	 *
+	 * @param    array    $ids   A list of the primary keys to remove.
+	 *
+	 * @return   boolean  True on success.
+	 */
+	public function remove($ids) {
+		if (empty($ids)) {
+			return false;
+		}
+
+		$this->checkAccess();
+
+		$this->clearCache($ids);
+		$result = $this->getModel()->remove($ids);
+
+		return $result;
+	}
+
+	/**
+	 * Method to check if counter exists for that site
+	 *
+	 * @param    integer   $idsite   Site ID
+	 *
+	 * @return   string
+	 */
+	public function counterExists($idsite) {
+		if (empty($idsite)) {
+			return json_encode(array('success' => 0));
+		}
+
+		$result = $this->getModel()->counterExists($idsite);
 
 		return json_encode($result);
 	}
 
+	/**
+	 * Method to save the data into DB
+	 *
+	 * @return   integer   Return lastInsertID or item ID on update
+	 */
 	public function save() {
-		$id = Common::getRequestVar('id', 0, 'int');
-		$siteid = Common::getRequestVar('siteid', 0, 'int');
-		$published = Common::getRequestVar('published', 0, 'int');
-		$title = Common::getRequestVar('title', 'Default site', 'string');
+		$id = Common::getRequestVar('id', array(), 'array');
+		$site_id = Common::getRequestVar('siteid', 0, 'int');
 
-		// Manipulating with date
-		$start_date = Common::getRequestVar('start_date', '', 'string');
-		$start_date_period = Common::getRequestVar('start_date_period', '', 'string');
-		if (empty($start_date) && empty($start_date_period)) {
-			$start_date_period = 'none';
-		}
-		
-		$params = json_encode(array(
-			'show_sitename' => 		Common::getRequestVar('show_sitename', 1, 'int'),
-			'show_visits' => 		Common::getRequestVar('show_visits', 1, 'int'),
-			'show_views' => 		Common::getRequestVar('show_views', 1, 'int'),
-			'sitename_pos_x' => 	Common::getRequestVar('sitename_pos_x', 3, 'int'),
-			'sitename_pos_y' => 	Common::getRequestVar('sitename_pos_y', 13, 'int'),
-			'visitors_pos_x' => 	Common::getRequestVar('visitors_pos_x', 3, 'int'),
-			'visitors_pos_y' => 	Common::getRequestVar('visitors_pos_y', 26, 'int'),
-			'views_pos_x' => 		Common::getRequestVar('views_pos_x', 30, 'int'),
-			'views_pos_y' => 		Common::getRequestVar('views_pos_y', 26, 'int'),
-			'img_size_x' => 		Common::getRequestVar('img_size_x', 80, 'int'),
-			'img_size_y' => 		Common::getRequestVar('img_size_y', 31, 'int'),
-			'sitename_font_size' => Common::getRequestVar('sitename_font_size', 7, 'int'),
-			'visits_font_size' => 	Common::getRequestVar('visits_font_size', 7, 'int'),
-			'hits_font_size' => 	Common::getRequestVar('hits_font_size', 7, 'int'),
-			'img_path' => 			Common::getRequestVar('img_path', '', 'string'),
-			'font_path' => 			Common::getRequestVar('font_path', '', 'string'),
-			'cache' => 				Common::getRequestVar('cache', 1, 'int'),
-			'cache_time' => 		Common::getRequestVar('cache_time', 900, 'int'),
-			'start_date' => 		$start_date,
-			'start_date_period' => 	$start_date_period,
-			'token' => 				Common::getRequestVar('token', 'anonymous', 'string'),
-			'color_sitename' => 	Common::getRequestVar('color_sitename', '#03374A', 'string'),
-			'color_visits' => 		Common::getRequestVar('color_visits', '#F16045', 'string'),
-			'color_views' => 		Common::getRequestVar('color_views', '#E07A52', 'string'),
-			'last_minutes' => 		Common::getRequestVar('last_minutes', 30, 'int'),
-			'check_interval' => 	Common::getRequestVar('check_interval', 10000, 'int'),
-			'static' => 			Common::getRequestVar('static', 1, 'int'),
-			'livestat_elem_id' => 	Common::getRequestVar('livestat_elem_id', '', 'string'),
-			'tpl_by_countries' => 	Common::getRequestVar('tpl_by_countries', '', 'string'),
-			'tpl_by_countries_elem_id' => Common::getRequestVar('tpl_by_countries_elem_id', '', 'string'),
-		));
-
-		if ($siteid == 0) {
+		if (empty($id) || empty($site_id)) {
 			return false;
-			exit();
 		}
 
-		if ($id == 0) {
-			$db = Db::get();
+		$this->checkAccess();
 
-			 $db->insert(
-				Common::prefixTable('counter_sites'),
-				array(
-					'idsite' => (int)$siteid,
-					'title' => $title,
-					'params' => $params,
-					'published' => (int)$published
-				)
-			);
-
-			return $db->lastInsertId();
-		} else {
-			Db::exec("UPDATE `".Common::prefixTable('counter_sites')."`"
-				. "\n SET `idsite` = '".(int)$siteid."', `title` = '".$title."', `params` = '".$params."', `published` = '".(int)$published."'"
-				. "\n WHERE `id` = ".(int)$id);
-
-			return $id;
-		}
-	}
-
-	/**
-	 * Remove counter from DB
-	 *
-	 * @param   bool  $id		Counter ID
-	 *
-	 * @return	json	string
-	 */
-	public function remove($id) {
-		$success = 0;
-
-		if (!empty($id)) {
-			Db::exec("DELETE FROM `".Common::prefixTable('counter_sites')."` WHERE `id` = ".(int)$id);
-			$success = 1;
-		}
-
-		return json_encode(array('success'=>$success));
-	}
-
-	/**
-	 * Get data for one counter or list of counters
-	 *
-	 * @param   bool  $id		False - get data for all counters
-	 *
-	 * @return	array
-	 */
-	public function getCountersData($id=false) {
-		$result = array();
-
-		// if false - retrieve data for all sites
-		if ($id === false) {
-			$sites = SitesManager::getInstance()->getSitesIdWithAdminAccess();
-			$query = Db::fetchAll("SELECT `id`, `idsite`, `title`, `params`, `published`"
-				. "\n FROM `".Common::prefixTable('counter_sites')."`"
-				. "\n WHERE `idsite` IN (".implode(',', $sites).")"
-				. "\n ORDER BY `idsite` ASC");
-
-			if(!empty($query)) {
-				foreach ($query as $key=>$row) {
-					$result[$key]['id'] = $row['id'];
-					$result[$key]['idsite'] = $row['idsite'];
-					$result[$key]['params'] = json_decode($row['params'], true);
-					$result[$key]['title'] = $row['title'];
-					$result[$key]['published'] = $row['published'];
-				}
-			}
-		} else {
-			$row = Db::fetchRow("SELECT `id`, `idsite`, `title`, `params`, `published` FROM `".Common::prefixTable('counter_sites')."` WHERE `id` = ".$id);
-
-			$result['id'] = $row['id'];
-			$result['idsite'] = $row['idsite'];
-			$result['params'] = json_decode($row['params'], true);
-			$result['params']['tpl_by_countries'] = html_entity_decode($result['params']['tpl_by_countries'], ENT_QUOTES, 'UTF-8');
-			$result['title'] = $row['title'];
-			$result['published'] = $row['published'];
-
-			if (empty($result['params']['token'])) {
-				$result['params']['token'] = Access::getInstance()->getTokenAuth();
-			}
-
-			/* Cross-Origin Resource Sharing (CORS) */
-			/* we fetch the urls associated to this counter */
-			$query = "SELECT `s`.`main_url`, `u`.`url`"
-				. "\n FROM `".Common::prefixTable('site')."` AS `s`"
-				. "\n LEFT JOIN `".Common::prefixTable('site_url')."` AS `u` ON `s`.`idsite` = `u`.`idsite`"
-				. "\n WHERE `s`.`idsite` = ".(int)$row['idsite'];
-			$rows = Db::fetchAll($query);
-
-			$origins = array();
-			$p = array('/http:\/\//', '/https:\/\//');
-			$r = array('', '');
-
-			if (!empty($rows)) {
-				foreach($rows as $row) {
-					$origins[] = $row['main_url'];
-					$origins[] = $row['url'];
-				}
-
-				$origins = array_unique(preg_replace($p, $r, $origins));
-			}
-
-			$result['origins'] = $origins;
-		}
+		$result = $this->getModel()->save($id, $this->getModel()->getForm(true));
 
 		return $result;
 	}
 
 	/**
-	 * Checking the user access rights
+	 * Enqueue message in the session and display it.
 	 *
-	 * @param   bool  $is_index		True if counter data request from frontpage
+	 * @param    string    $message     The text to display
+	 * @param    string    $style       Style of the message. See CONTEXT_* in core/Notification.php fot valid message styles.
+	 * @param    string    $type        Message type. See TYPE_* in core/Notification.php fot valid message types.
+	 * @param    integer   $priority    Priority. See PRIORITY_* in core/Notification.php fot valid message priorities.
 	 *
-	 * @return	true or Exception
+	 * @return	void
+	 */
+	public function enqueueMessage($message, $style='info', $type='transient', $priority=0) {
+		$notification = new Notification($message);
+
+		switch (strtolower($style)) {
+			case 'success':
+				$notification->context = Notification::CONTEXT_SUCCESS;
+				break;
+
+			case 'error':
+				$notification->context = Notification::CONTEXT_ERROR;
+				break;
+
+			case 'warning':
+				$notification->context = Notification::CONTEXT_WARNING;
+				break;
+
+			case 'info':
+			default:
+				$notification->context = Notification::CONTEXT_INFO;
+				break;
+		}
+
+		if (!empty($type) || !is_null($type)) {
+			if ($type == 'persistent') {
+				$notification->type = Notification::TYPE_PERSISTENT;
+			} elseif ($type == 'toast') {
+				$notification->type = Notification::TYPE_TOAST;
+			} else {
+				$notification->type = Notification::TYPE_TRANSIENT;
+			}
+		}
+
+		if (!empty($priority)) {
+			if ($priority === 1) {
+				$notification->priority = Notification::PRIORITY_MIN;
+			} elseif ($priority === 25) {
+				$notification->priority = Notification::PRIORITY_LOW;
+			} elseif ($priority === 50) {
+				$notification->priority = Notification::PRIORITY_HIGH;
+			} elseif ($priority === 100) {
+				$notification->priority = Notification::PRIORITY_MAX;
+			}
+		}
+
+		Notification\Manager::notify('myUniqueNotificationId', $notification);
+	}
+
+	/**
+	 * Check the user access rights
+	 *
+	 * @param   boolean  $is_index   True if counter data requested from frontpage
+	 *
+	 * @return	boolean
+	 * @throws  Exception
 	 */
 	public function checkAccess($is_index=false) {
 		$sites_manager = SitesManager::getInstance();
 		$access = Access::getInstance();
-		$id_arr = $sites_manager->getSitesIdWithAdminAccess();
+		$sites_ids = $sites_manager->getSitesIdWithAdminAccess();
 
 		// Checking the user access rights. If the user not an admin for at least one site when throw an error
-		if (count($id_arr) <= 0) {
+		if (count($sites_ids) <= 0) {
 			throw new Exception(Piwik::Translate('General_ExceptionPrivilegeAtLeastOneWebsite', array('admin')));
 		} else {
 			// Don't perfom checking for index
@@ -263,36 +225,44 @@ class API extends \Piwik\Plugin\API {
 					return true;
 				}
 
-				$id = Common::getRequestVar('id', 0, 'int');
+				$ids = Common::getRequestVar('id', array(), 'array');
 				$action = Common::getRequestVar('action', '', 'string');
 
-				if (empty($id) && $action == 'siteidPrecheck') {
+				if (empty($ids) && $action == 'counter_exists') {
 					return true;
 				}
 
-				if (!empty($id) && ($action != 'save' || $action != 'apply')) {
+				if (!empty($ids) && ($action != 'save' || $action != 'apply' || $action != 'remove' || $action != 'publish' || $action != 'unpublish')) {
 					$login = $access->getLogin();
-					$result = Db::fetchRow("SELECT `idsite`"
-						. "\n FROM `".Common::prefixTable('access')."`"
-						. "\n WHERE `idsite` = ("
-							. "\n\t SELECT `idsite`"
-							. "\n\t FROM `".Common::prefixTable('counter_sites')."`"
-							. "\n\t	WHERE `id` = ".(int)$id
-						. "\n ) AND `access` = 'admin' AND `login` = '".$login."'");
 
-					if ($result === false) {
-						throw new Exception(Piwik::Translate('General_ExceptionPrivilegeAccessWebsite', array('admin', $id)));
+					$result = Db::fetchAll("SELECT idsite"
+						. "\n FROM ".Common::prefixTable('access')
+						. "\n WHERE idsite IN (SELECT idsite FROM ".Common::prefixTable('counter_sites')." WHERE id IN (".implode(',', $ids).")) AND access = 'admin' AND login = '".$login."'");
+
+					if (count($result) > 0) {
+						return true;
+					} else {
+						throw new Exception(Piwik::Translate('General_ExceptionPrivilegeAtLeastOneWebsite', array('admin')));
 					}
 				} else {
 					return true;
 				}
 			}
 		}
+
+		return false;
 	}
 
-	private function createImage($extra=array()) {
+	/**
+	 * Clear cache for custom counter
+	 *
+	 * @param    array  $params   An array with the counter data.
+	 *
+	 * @return   mixed
+	 */
+	private function createImage($params=array()) {
 		$id = Common::getRequestVar('id', 0, 'int');
-		$params = count($extra) > 0 ? $extra : $this->getCountersData($id);
+		$params = count($params) > 0 ? $params : $this->getItem($id);
 		$date_request = Common::getRequestVar('date', '', 'string');
 		$date_start = $params['params']['start_date'];
 		$date_start_period = $params['params']['start_date_period'];
@@ -325,9 +295,7 @@ class API extends \Piwik\Plugin\API {
 			$date = $_date;
 		}
 
-		$counter_params = &$params['params'];
-
-		$request = new Request('method=VisitsSummary.get&idSite='.(int)$params['idsite'].'&period=range&date='.$date.','.date('Y-m-d').'&format=php&serialize=0&token_auth='.$counter_params['token']);
+		$request = new Request('method=VisitsSummary.get&idSite='.(int)$params['idsite'].'&period=range&date='.$date.','.date('Y-m-d').'&format=php&serialize=0&token_auth='.$params['params']['token']);
 		$result = $request->process();
 
 		$visits = 0;
@@ -346,25 +314,50 @@ class API extends \Piwik\Plugin\API {
 			$c_views = 0;
 
 			foreach ($result as $value) {
-				$visits = $c_visits+$value['nb_visits'];
-				$views = $c_views+$value['nb_actions'];
+				$visits = $c_visits + $value['nb_visits'];
+				$views = $c_views + $value['nb_actions'];
 			}
 		}
 
-		$data = array($visits, $views);
+		// Add or subtract initial values
+		if ($params['visits'] != 0) {
+			if ($params['visits'] < 0 && $visits > abs($params['visits'])) {
+				$visits = $visits - abs($params['visits']);
+			} elseif ($params['visits'] > 0) {
+				// Number of visits cannot be more than number of views, so we not change the number of visits
+				if (($visits + abs($params['visits'])) < $views) {
+					$visits = $visits + abs($params['visits']);
+				}
+			}
+		}
 
-		if (!empty($counter_params['img_path']) && file_exists($counter_params['img_path'])) {
+		if ($params['views'] != 0) {
+			if ($params['views'] < 0 && $views > abs($params['views'])) {
+				$views = $views - abs($params['views']);
+			} elseif ($params['views'] > 0) {
+				$views = $views + abs($params['views']);
+			}
+		}
+
+		// Format numbers to human readable
+		if (array_key_exists('format_numbers', $params['params']) && $params['params']['format_numbers'] == 1) {
+			$data = array($this->formatNumber($visits), $this->formatNumber($views));
+		} else {
+			$data = array($visits, $views);
+		}
+
+		if (!empty($params['params']['img_path']) && file_exists($params['params']['img_path'])) {
 			$mime = $this->getMime($params['params']['img_path']);
-			$dst_im = imagecreatetruecolor($counter_params['img_size_x'], $counter_params['img_size_y']);
+			$dst_im = imagecreatetruecolor($params['params']['img_size_x'], $params['params']['img_size_y']);
 
 			if ($mime == 'image/png') {
-				$src_im = imagecreatefrompng($counter_params['img_path']);
+				$src_im = imagecreatefrompng($params['params']['img_path']);
 				imagealphablending($src_im, true);
 				imagesavealpha($src_im, true);
 			} elseif ($mime == 'image/gif') {
-				$src_im = imagecreatefromgif($counter_params['img_path']);
+				$src_im = imagecreatefromgif($params['params']['img_path']);
 			} elseif ($mime == 'image/jpeg') {
-				$src_im = imagecreatefromjpeg($counter_params['img_path']);
+				$src_im = imagecreatefromjpeg($params['params']['img_path']);
 			} else { // Unsupported image type
 				// Output an 1x1 transparent gif
 				$im = imagecreatetruecolor(1, 1);
@@ -378,50 +371,50 @@ class API extends \Piwik\Plugin\API {
 				exit();
 			}
 
-			list($w, $h) = getimagesize($counter_params['img_path']);
-			if (!empty($counter_params['font_path']) && file_exists($counter_params['font_path'])) {
+			list($w, $h) = getimagesize($params['params']['img_path']);
+			if (!empty($params['params']['font_path']) && file_exists($params['params']['font_path'])) {
 				// Draw sitename
-				if (!empty($params['title']) && $counter_params['show_sitename'] == 1) {
-					$rgb_arr_sitename = $this->rgb2array($counter_params['color_sitename']);
+				if (!empty($params['title']) && $params['params']['show_sitename'] == 1) {
+					$rgb_arr_sitename = $this->rgb2array($params['params']['color_sitename']);
 					$color_sitename = imagecolorallocate($src_im, $rgb_arr_sitename['r'], $rgb_arr_sitename['g'], $rgb_arr_sitename['b']);
-					imagettftext($src_im, $counter_params['sitename_font_size'], 0, $counter_params['sitename_pos_x'], $counter_params['sitename_pos_y'], $color_sitename, $counter_params['font_path'], $params['title']);
+					imagettftext($src_im, $params['params']['sitename_font_size'], 0, $params['params']['sitename_pos_x'], $params['params']['sitename_pos_y'], $color_sitename, $params['params']['font_path'], $params['title']);
 				}
 
 				// Draw visits
-				if ($counter_params['show_visits'] == 1) {
-					$rgb_arr_visits = $this->rgb2array($counter_params['color_visits']);
+				if ($params['params']['show_visits'] == 1) {
+					$rgb_arr_visits = $this->rgb2array($params['params']['color_visits']);
 					$color_visits = imagecolorallocate($src_im, $rgb_arr_visits['r'], $rgb_arr_visits['g'], $rgb_arr_visits['b']);
-					imagettftext($src_im, $counter_params['visits_font_size'], 0, $counter_params['visitors_pos_x'], $counter_params['visitors_pos_y'], $color_visits, $counter_params['font_path'], $data[0]);
+					imagettftext($src_im, $params['params']['visits_font_size'], 0, $params['params']['visitors_pos_x'], $params['params']['visitors_pos_y'], $color_visits, $params['params']['font_path'], $data[0]);
 				}
 
 				// Draw views
-				if ($counter_params['show_views'] == 1) {
-					$rgb_arr_views = $this->rgb2array($counter_params['color_views']);
+				if ($params['params']['show_views'] == 1) {
+					$rgb_arr_views = $this->rgb2array($params['params']['color_views']);
 					$color_views = imagecolorallocate($src_im, $rgb_arr_views['r'], $rgb_arr_views['g'], $rgb_arr_views['b']);
-					imagettftext($src_im, $counter_params['hits_font_size'], 0, $counter_params['views_pos_x'], $counter_params['views_pos_y'], $color_views, $counter_params['font_path'], $data[1]);
+					imagettftext($src_im, $params['params']['hits_font_size'], 0, $params['params']['views_pos_x'], $params['params']['views_pos_y'], $color_views, $params['params']['font_path'], $data[1]);
 				}
 			} else {
 				// Draw sitename
-				if (!empty($params['title']) && $counter_params['show_sitename'] == 1) {
-					$rgb_arr_sitename = $this->rgb2array($counter_params['color_sitename']);
+				if (!empty($params['title']) && $params['params']['show_sitename'] == 1) {
+					$rgb_arr_sitename = $this->rgb2array($params['params']['color_sitename']);
 					// Text must be only in Latin2!
-					imagestring($src_im, $counter_params['sitename_font_size']-5, $counter_params['sitename_pos_x'], $counter_params['sitename_pos_y']-10, $params['title'], imagecolorallocate($src_im, $rgb_arr_sitename['r'], $rgb_arr_sitename['g'], $rgb_arr_sitename['b']));
+					imagestring($src_im, $params['params']['sitename_font_size']-5, $params['params']['sitename_pos_x'], $params['params']['sitename_pos_y']-10, $params['title'], imagecolorallocate($src_im, $rgb_arr_sitename['r'], $rgb_arr_sitename['g'], $rgb_arr_sitename['b']));
 				}
 
 				// Draw visits
-				if ($counter_params['show_visits'] == 1) {
-					$rgb_arr_visits = $this->rgb2array($counter_params['color_visits']);
-					imagestring($src_im, $counter_params['visits_font_size']-5, $counter_params['visitors_pos_x'], $counter_params['visitors_pos_y']-10, $data[0], imagecolorallocate($src_im, $rgb_arr_visits['r'], $rgb_arr_visits['g'], $rgb_arr_visits['b']));
+				if ($params['params']['show_visits'] == 1) {
+					$rgb_arr_visits = $this->rgb2array($params['params']['color_visits']);
+					imagestring($src_im, $params['params']['visits_font_size']-5, $params['params']['visitors_pos_x'], $params['params']['visitors_pos_y']-10, $data[0], imagecolorallocate($src_im, $rgb_arr_visits['r'], $rgb_arr_visits['g'], $rgb_arr_visits['b']));
 				}
 
 				// Draw views
-				if ($counter_params['show_views'] == 1) {
-					$rgb_arr_views = $this->rgb2array($counter_params['color_views']);
-					imagestring($src_im, $counter_params['hits_font_size']-5, $counter_params['views_pos_x']+5, $counter_params['views_pos_y']-10, $data[1], imagecolorallocate($src_im, $rgb_arr_views['r'], $rgb_arr_views['g'], $rgb_arr_views['b']));
+				if ($params['params']['show_views'] == 1) {
+					$rgb_arr_views = $this->rgb2array($params['params']['color_views']);
+					imagestring($src_im, $params['params']['hits_font_size']-5, $params['params']['views_pos_x']+5, $params['params']['views_pos_y']-10, $data[1], imagecolorallocate($src_im, $rgb_arr_views['r'], $rgb_arr_views['g'], $rgb_arr_views['b']));
 				}
 			}
 
-			imagecopyresampled($dst_im, $src_im, 0, 0, 0, 0, $counter_params['img_size_x'], $counter_params['img_size_y'], $w, $h);
+			imagecopyresampled($dst_im, $src_im, 0, 0, 0, 0, $params['params']['img_size_x'], $params['params']['img_size_y'], $w, $h);
 
 			header('Content-type: '.$mime);
 
@@ -435,16 +428,18 @@ class API extends \Piwik\Plugin\API {
 
 			imagedestroy($src_im);
 		}
+
+		return false;
 	}
 
 	/**
-	 * Show image from cache or create a new one
+	 * Show image from cache or create if it not exists
 	 *
-	 * @return image binary
+	 * @return   mixed
 	 */
 	public function showImage() {
 		$id = Common::getRequestVar('id', 0, 'int');
-		$params = $this->getCountersData($id);
+		$params = $this->getItem($id);
 		$cache_id = 'counter_image_'.md5($id).'_'.$id;
 
 		// If the counter has not been published - output an 1x1 transparent gif
@@ -467,7 +462,7 @@ class API extends \Piwik\Plugin\API {
 					'automatic_serialization' => false
 				),
 				array(
-					'cache_dir'=>PIWIK_DOCUMENT_ROOT.DS.'tmp'.DS.'cache'.DS
+					'cache_dir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT.DIRECTORY_SEPARATOR.'tmp'.DIRECTORY_SEPARATOR.'cache'.DIRECTORY_SEPARATOR)
 				)
 			);
 
@@ -479,65 +474,39 @@ class API extends \Piwik\Plugin\API {
 				// Load and output image from cache
 				echo $cache->load($cache_id, true);
 			} else {
-				// Build new image and save to cache
+				// Build new image and save into cache
 				if (!$cache->start($cache_id)) {
-					echo $this->createImage();
+					$this->createImage();
 					$cache->end();
 				}
 			}
 		} else {
-			echo $this->createImage();
+			$this->createImage();
 		}
 	}
 
 	/**
-	 * Create image for preview while editing counter data. For backend only
+	 * Create image for preview while editing counter data. For backend only. This method do not use cache.
 	 *
-	 * @return image binary
+	 * @return   mixed
 	 */
 	public function previewImage() {
-		$params = array(
-			'id' => 		Common::getRequestVar('id', 0, 'int'),
-			'idsite' => 	Common::getRequestVar('siteid', 0, 'int'),
-			'published' => 	Common::getRequestVar('published', 0, 'int'),
-			'title' => 		Common::getRequestVar('title', 'Default site', 'string'),
-			'params' => array(
-				'show_sitename' => 		Common::getRequestVar('show_sitename', 1, 'int'),
-				'show_visits' => 		Common::getRequestVar('show_visits', 1, 'int'),
-				'show_views' => 		Common::getRequestVar('show_views', 1, 'int'),
-				'sitename_pos_x' => 	Common::getRequestVar('sitename_pos_x', 3, 'int'),
-				'sitename_pos_y' => 	Common::getRequestVar('sitename_pos_y', 13, 'int'),
-				'visitors_pos_x' => 	Common::getRequestVar('visitors_pos_x', 3, 'int'),
-				'visitors_pos_y' => 	Common::getRequestVar('visitors_pos_y', 26, 'int'),
-				'views_pos_x' => 		Common::getRequestVar('views_pos_x', 30, 'int'),
-				'views_pos_y' => 		Common::getRequestVar('views_pos_y', 26, 'int'),
-				'img_size_x' => 		Common::getRequestVar('img_size_x', 80, 'int'),
-				'img_size_y' => 		Common::getRequestVar('img_size_y', 31, 'int'),
-				'sitename_font_size' => Common::getRequestVar('sitename_font_size', 7, 'int'),
-				'visits_font_size' => 	Common::getRequestVar('visits_font_size', 7, 'int'),
-				'hits_font_size' => 	Common::getRequestVar('hits_font_size', 7, 'int'),
-				'img_path' => 			Common::getRequestVar('img_path', '', 'string'),
-				'font_path' => 			Common::getRequestVar('font_path', '', 'string'),
-				'date' => 				Common::getRequestVar('date', '', 'string'),
-				'start_date' => 		Common::getRequestVar('start_date', '', 'string'),
-				'start_date_period' => 	Common::getRequestVar('start_date_period', '', 'string'),
-				'token' => 				Common::getRequestVar('token', 'anonymous', 'string'),
-				'color_sitename' => 	Common::getRequestVar('color_sitename', '#03374A', 'string'),
-				'color_visits' => 		Common::getRequestVar('color_visits', '#F16045', 'string'),
-				'color_views' => 		Common::getRequestVar('color_views', '#E07A52', 'string')
-			)
-		);
-
+		$this->checkAccess();
 		@set_time_limit(0);
-		echo $this->createImage($params);
+		$this->createImage($this->getModel()->getForm());
 	}
 
+	/**
+	 * Method to get live visitors count
+	 *
+	 * @return	string
+	 */
 	public function getLiveVisitorsCount() {
 		$type = Common::getRequestVar('type', '', 'string');
 		$id = Common::getRequestVar('id', 0, 'int');
-		$params = $this->getCountersData($id);
+		$params = $this->getItem();
 
-		if ($params['published'] != 1) die();
+		if ($params['published'] != 1) exit();
 
 		if ($type == 'js') {
 			if (!empty($params['params']['tpl_by_countries'])) {
@@ -553,6 +522,11 @@ class API extends \Piwik\Plugin\API {
 			echo 'var elem = "'.$dom_elem_id.'", url = "'.$data_ajax_url.'"; function createXHR(){var a;if(window.ActiveXObject){try{a=new ActiveXObject("Microsoft.XMLHTTP")}catch(b){document.getElementById(elem).innerHTML=b.message;a=null}}else{a=new XMLHttpRequest}return a}function sendRequest(){var a=createXHR();a.onreadystatechange=function(){if(a.readyState===4){document.getElementById(elem).innerHTML=a.responseText}};a.open("GET",url,true);a.send()}sendRequest();';
 			echo ($params['params']['static'] == 0) ? 'setInterval(sendRequest, '.(int)$params['params']['check_interval'].');' : '';
 		} else {
+			$nbv_m = '';
+			$nbc_m = '';
+			$nba_m = '';
+			$format = '';
+
 			if (!empty($params['params']['tpl_by_countries'])) {
 				// Search for start_date value for period
 				if (preg_match('#\[date(.*?)\]#', $params['params']['tpl_by_countries'], $matches)) {
@@ -574,7 +548,6 @@ class API extends \Piwik\Plugin\API {
 
 					$date_range = $start_date.','.$end_date;
 				} else {
-					$format = '';
 					$date_range = $params['params']['start_date'].','.date('Y-m-d'); // default date range
 				}
 
@@ -582,21 +555,15 @@ class API extends \Piwik\Plugin\API {
 				// Visits
 				if (preg_match('#\[nb_visits(.*?)\]#', $params['params']['tpl_by_countries'], $nbv_matches)) {
 					preg_match('#\[nb_visits(\soffset="(?P<offset>.+?)")\]#i', $params['params']['tpl_by_countries'], $nbv_m);
-				} else {
-					$nbv_m = '';
 				}
 
 				// Countries
 				if (preg_match('#\[nb_countries(.*?)\]#', $params['params']['tpl_by_countries'], $nbc_matches)) {
 					preg_match('#\[nb_countries(\soffset="(?P<offset>.+?)")\]#i', $params['params']['tpl_by_countries'], $nbc_m);
-				} else {
-					$nbc_m = '';
 				}
 
 				if (preg_match('#\[nb_actions(.*?)\]#', $params['params']['tpl_by_countries'], $nbc_matches)) {
 					preg_match('#\[nb_actions(\soffset="(?P<offset>.+?)")\]#i', $params['params']['tpl_by_countries'], $nba_m);
-				} else {
-					$nba_m = '';
 				}
 
 				$request = new Request('method=UserCountry.getCountry&idSite='.$params['idsite'].'&period=range&date='.$date_range.'&format=JSON&token_auth='.$params['params']['token']);
@@ -637,7 +604,7 @@ class API extends \Piwik\Plugin\API {
 			if (array_key_exists('Origin', $headers)) {
 				$origin = $headers['Origin'];
 
-				if ( in_array(preg_replace($protocol, $r, $origin), $params['origins']) ) {
+				if (in_array(preg_replace($protocol, $r, $origin), $params['origins'])) {
 					header('Access-Control-Allow-Origin: '. $origin);
 				}
 			}
@@ -686,16 +653,16 @@ class API extends \Piwik\Plugin\API {
 				}
 
 				$patterns = array(
-					'nb_visits'=>'#\[nb_visits(.*?)\]#',
-					'nb_countries'=>'#\[nb_countries(.*?)\]#',
-					'nb_actions'=>'#\[nb_actions(.*?)\]#',
-					'date'=>'#\[date(.*?)\]#'
+					'nb_visits'    => '#\[nb_visits(.*?)\]#',
+					'nb_countries' => '#\[nb_countries(.*?)\]#',
+					'nb_actions'   => '#\[nb_actions(.*?)\]#',
+					'date'         => '#\[date(.*?)\]#'
 				);
 				$data = array(
-					'nb_visits'=>$nb_visits,
-					'nb_actions'=>$nb_actions,
-					'nb_countries'=>$nb_countries,
-					'date'=>$format,
+					'nb_visits'    => $nb_visits,
+					'nb_actions'   => $nb_actions,
+					'nb_countries' => $nb_countries,
+					'date'         => $format
 				);
 				ksort($data);
 				ksort($patterns);
@@ -713,35 +680,59 @@ class API extends \Piwik\Plugin\API {
 	/**
 	 * Clear cache for custom counter
 	 *
-	 * @return json string
+	 * @param    array  $ids   A list of the primary keys.
+	 *
+	 * @return   boolean  True on success.
 	 */
-	public function clearCache() {
-		$id = Common::getRequestVar('id', 0, 'int');
-		$cache_id = 'counter_image_'.md5($id).'_'.$id;
-		$lifetime = Common::getRequestVar('lifetime', 0, 'int');
+	public function clearCache($ids) {
+		if (empty($ids)) {
+			return false;
+		}
+
+		if (Common::getRequestVar('action', '', 'string') !== 'remove') {
+			$this->checkAccess();
+		}
+
+		$errors = array();
 		$cache = Zend_Cache::factory('Output', 'File',
 			array(),
 			array(
-				'cache_dir'=>PIWIK_DOCUMENT_ROOT.DS.'tmp'.DS.'cache'.DS
+				'cache_dir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT.DIRECTORY_SEPARATOR.'tmp'.DIRECTORY_SEPARATOR.'cache'.DIRECTORY_SEPARATOR)
 			)
 		);
-		$success = 0;
 
-		if ($cache->remove($cache_id)) {
-			$success = 1;
+		foreach ($ids as $id) {
+			if (!$cache->remove('counter_image_'.md5($id).'_'.$id)) {
+				$errors[] = $id;
+			}
 		}
 
-		return json_encode(array('success'=>$success));
+		if (!empty($errors)) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Get plugin information
+	 *
+	 * @return	array
+	 */
+	public function getPluginInfo() {
+		$plugins = Manager::getInstance()->loadAllPluginsAndGetTheirInfo();
+
+		return $plugins['Counter'];
 	}
 
 	/**
 	 * Method to get proper MIME type
 	 *
-	 * @param   string  $path		Absolute path to file
+	 * @param   string  $path    Absolute path to file
 	 *
 	 * @return	string
 	 */
-	protected function getMime($path) {
+	private function getMime($path) {
 		if (!empty($path) && file_exists($path)) {
 			if (function_exists('finfo_open')) {
 				$finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -768,5 +759,35 @@ class API extends \Piwik\Plugin\API {
 		}
 
 		return $mime;
+	}
+
+	private function formatNumber($number) {
+		if ($number > 1000000000000) {
+			$number = round(($number / 1000000000000), 1).'T';
+		} else if ($number > 1000000000) {
+			$number = round(($number / 1000000000), 1).'B';
+		} else if ($number > 1000000) {
+			$number = round(($number / 1000000), 1).'M';
+		} else if ($number > 1000) {
+			$number = round(($number / 1000), 1).'K';
+		} else {
+			$number = number_format($number);
+		}
+
+		return $number;
+	}
+
+	private function rgb2array($rgb) {
+		$rgb = str_replace('#', '', $rgb);
+
+		return array(
+			'r' => base_convert(substr($rgb, 0, 2), 16, 10),
+			'g' => base_convert(substr($rgb, 2, 2), 16, 10),
+			'b' => base_convert(substr($rgb, 4, 2), 16, 10)
+		);
+	}
+
+	private function getModel() {
+		return new Model();
 	}
 }

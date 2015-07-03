@@ -2,7 +2,7 @@
 /**
  * @package		Piwik.Counter.Controller
  * @copyright	Copyright (C) 2010 Libra.ms. All rights reserved.
- * @license		GNU General Public License version 2 or later
+ * @license		GNU General Public License version 3 or later
  * @url			http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
  * @url			http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
  */
@@ -14,31 +14,47 @@ use Piwik\DataTable\Renderer\Json;
 use Piwik\Menu\MenuAdmin;
 use Piwik\Menu\MenuTop;
 use Piwik\Menu\MenuUser;
-use Piwik\Notification\Manager as NotificationManager;
-use Piwik\Piwik;
-use Piwik\View;
 use Piwik\Plugin;
+use Piwik\Plugins\SitesManager\API as APISitesManager;
+use Piwik\Translation\Translator;
+use Piwik\View;
 
-class Controller extends \Piwik\Plugin\Controller {
-	public function __construct() {
-		// Get API from Plugins\Counter\API
+class Controller extends Plugin\Controller {
+	/**
+	 * Template name.
+	 *
+	 * @var    string
+	 */
+	private $template = 'default';
+
+	/**
+	 * Translator class.
+	 *
+	 * @var   Translator
+	 */
+	private $translator;
+
+	public function __construct(Translator $translator) {
 		$this->api = API::getInstance();
+		$this->translator = $translator;
+
+		parent::__construct();
 	}
 
 	public function index() {
-		$this->api->checkAccess(true);
-
-		$view = new View('@Counter/default.twig');
+		$view = new View('@Counter/'.$this->template.'.twig');
 		$this->setBasicVariablesView($view);
+		$this->setGeneralVariablesView($view);
 		$view->topMenu = MenuTop::getInstance()->getMenu();
 		$view->userMenu = MenuUser::getInstance()->getMenu();
 		$view->adminMenu = MenuAdmin::getInstance()->getMenu();
-
-		$view->counters = $this->api->getCountersData();
-		$view->notifications = '';
-		$view->siteName = Piwik::translate('Counter_Settings');
+		$view->counters = $this->api->getItems();
 		$view->plugin_info = $this->api->getPluginInfo();
-		$view->idSite = Common::getRequestVar('isSite', 1, 'int');
+
+		$viewableIdSites = APISitesManager::getInstance()->getSitesIdWithAtLeastViewAccess();
+		$defaultIdSite = reset($viewableIdSites);
+		$view->idSite = Common::getRequestVar('idSite', $defaultIdSite, 'int');
+
 		$view->period = Common::getRequestVar('period', 'day', 'string');
 		$view->date = Common::getRequestVar('date', 'yesterday', 'string');
 		$view->server_vars = array(
@@ -51,29 +67,98 @@ class Controller extends \Piwik\Plugin\Controller {
 	}
 
 	public function unpublish() {
-		return $this->publish(true);
+		$this->publish(0);
 	}
 
-	public function publish($state=false) {
-		$this->api->checkAccess();
+	public function publish($state=1) {
+		$ids = Common::getRequestVar('id', array(), 'array');
+		$result = $this->api->publish($ids, $state);
 
-		$result = $this->api->publish(Common::getRequestVar('id', 0, 'int'), $state);
+		if (!$result) {
+			$this->api->enqueueMessage($this->translator->translate('Counter_Error_has_occurred'), 'error');
+		} else {
+			if ($state == 1) {
+				if (count($ids) > 1) {
+					$message = $this->translator->translate('Counter_Published_success_1');
+				} else {
+					$message = $this->translator->translate('Counter_Published_success_0');
+				}
+			} else {
+				if (count($ids) > 1) {
+					$message = $this->translator->translate('Counter_Unpublished_success_1');
+				} else {
+					$message = $this->translator->translate('Counter_Unpublished_success_0');
+				}
+			}
+
+			$this->api->enqueueMessage($message, 'success', 'toast');
+		}
+
 		$this->redirectToIndex('Counter', 'index');
 	}
 
-	public function add() {
-		$this->api->checkAccess(true);
+	public function remove() {
+		$ids = Common::getRequestVar('id', array(), 'array');
+		$result = $this->api->remove($ids);
 
-		$view = new View('@Counter/default_add.twig');
+		if (strtolower(Common::getRequestVar('format', '', 'string')) === 'json') {
+			Json::sendHeaderJSON();
+			echo json_encode(array('success' => $result));
+		}
+
+		if (!$result) {
+			$this->api->enqueueMessage($this->translator->translate('Counter_Remove_error'), 'error');
+		} else {
+			if (count($ids) > 1) {
+				$message = $this->translator->translate('Counter_Removed_1');
+			} else {
+				$message = $this->translator->translate('Counter_Removed_0');
+			}
+
+			$this->api->enqueueMessage($message, 'success', 'toast');
+		}
+
+		$this->redirectToIndex('Counter', 'index');
+	}
+
+	public function clearCache() {
+		$result = $this->api->clearCache(Common::getRequestVar('id', array(), 'array'));
+
+		if (strtolower(Common::getRequestVar('format', '', 'string')) === 'json') {
+			Json::sendHeaderJSON();
+			echo json_encode(array('success' => $result));
+		}
+
+		if (!$result) {
+			$this->api->enqueueMessage($this->translator->translate('Counter_Cache_clear_error'), 'error');
+		} else {
+			$this->api->enqueueMessage($this->translator->translate('Counter_Cache_cleared'), 'success', 'toast');
+		}
+
+		$this->redirectToIndex('Counter', 'index');
+	}
+
+	public function counterExists() {
+		Json::sendHeaderJSON();
+		echo $this->api->counterExists(Common::getRequestVar('idsite', 0, 'int'));
+	}
+
+	public function add() {
+		$this->api->checkAccess();
+
+		$view = new View('@Counter/'.$this->template.'_add.twig');
 		$this->setBasicVariablesView($view);
+		$this->setGeneralVariablesView($view);
 		$view->topMenu = MenuTop::getInstance()->getMenu();
 		$view->userMenu = MenuUser::getInstance()->getMenu();
 		$view->adminMenu = MenuAdmin::getInstance()->getMenu();
-
-		$view->notifications = '';
 		$view->token = Access::getInstance()->getTokenAuth();
 		$view->plugin_info = $this->api->getPluginInfo();
-		$view->idSite = Common::getRequestVar('isSite', 1, 'int');
+
+		$viewableIdSites = APISitesManager::getInstance()->getSitesIdWithAtLeastViewAccess();
+		$defaultIdSite = reset($viewableIdSites);
+		$view->idSite = Common::getRequestVar('idSite', $defaultIdSite, 'int');
+
 		$view->period = Common::getRequestVar('period', 'day', 'string');
 		$view->date = Common::getRequestVar('date', 'yesterday', 'string');
 		$view->list_sites = $this->api->getSitesList();
@@ -84,19 +169,22 @@ class Controller extends \Piwik\Plugin\Controller {
 	public function edit() {
 		$this->api->checkAccess();
 
-		$view = new View('@Counter/default_edit.twig');
+		$view = new View('@Counter/'.$this->template.'_edit.twig');
 		$this->setBasicVariablesView($view);
+		$this->setGeneralVariablesView($view);
 		$view->topMenu = MenuTop::getInstance()->getMenu();
 		$view->userMenu = MenuUser::getInstance()->getMenu();
 		$view->adminMenu = MenuAdmin::getInstance()->getMenu();
-
-		$view->notifications = '';
 		$view->plugin_info = $this->api->getPluginInfo();
-		$view->idSite = Common::getRequestVar('isSite', 1, 'int');
+
+		$viewableIdSites = APISitesManager::getInstance()->getSitesIdWithAtLeastViewAccess();
+		$defaultIdSite = reset($viewableIdSites);
+		$view->idSite = Common::getRequestVar('idSite', $defaultIdSite, 'int');
+
 		$view->period = Common::getRequestVar('period', 'day', 'string');
 		$view->date = Common::getRequestVar('date', 'yesterday', 'string');
 		$view->list_sites = $this->api->getSitesList();
-		$view->data = $this->api->getCountersData(Common::getRequestVar('id', 0, 'int'));
+		$view->data = $this->api->getItem();
 
 		return $view->render();
 	}
@@ -106,33 +194,26 @@ class Controller extends \Piwik\Plugin\Controller {
 	}
 
 	public function apply($task='apply') {
-		$this->api->checkAccess();
-
 		$result = $this->api->save();
 
+		if (!$result) {
+			$this->api->enqueueMessage($this->translator->translate('Counter_Save_error'), 'error');
+		} else {
+			$this->api->enqueueMessage($this->translator->translate('Counter_Saved'), 'success', 'toast');
+		}
+
 		if ($task == 'apply') {
-			$this->redirectToIndex('Counter', 'edit', null, null, null, array('id'=>$result));
+			$this->redirectToIndex('Counter', 'edit', null, null, null, array('id[]' => $result));
 		} else {
 			$this->redirectToIndex('Counter', 'index');
 		}
 	}
 
-	public function remove() {
-		$this->api->checkAccess();
-
-		$result = $this->api->remove(Common::getRequestVar('id', 0, 'int'));
-
-		Json::sendHeaderJSON();
-		echo $result;
-	}
-
-	public function siteidPrecheck() {
-		$this->api->checkAccess();
-
-		Json::sendHeaderJSON();
-		echo $this->api->siteidPrecheck(Common::getRequestVar('idsite', 0, 'int'));
-	}
-
+	/**
+	 * Method to check if file exists
+	 *
+	 * @return  string
+	 */
 	public function checkpath() {
 		$this->api->checkAccess();
 
@@ -141,19 +222,11 @@ class Controller extends \Piwik\Plugin\Controller {
 		$success = file_exists($path) ? 1 : 0;
 
 		Json::sendHeaderJSON();
-		echo json_encode(array('success'=>$success));
+		echo json_encode(array('success' => $success));
 	}
 
 	public function preview() {
-		$this->api->checkAccess();
 		$this->api->previewImage();
-	}
-
-	public function clearCache() {
-		$this->api->checkAccess();
-
-		Json::sendHeaderJSON();
-		echo $this->api->clearCache();
 	}
 
 	public function show() {

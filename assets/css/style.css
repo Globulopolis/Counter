@@ -28,12 +28,8 @@
 }
 
 .c-footer a#c_check {
-	background: url("../../../../plugins/Zeitgeist/images/reload.png") no-repeat left center;
+	background: url("../../../../plugins/Morpheus/images/reload.png") no-repeat left center;
 	padding-left: 20px;
-}
-
-.ui-inline-help {
-	padding: 5px 10px;
 }
 
 .addRowCounter a {
@@ -51,30 +47,25 @@
 }
 
 .input-green {
-	background: url("../images/icons/publish_y.png") no-repeat right center;
+	background: url("../images/icons/publish_y.png") no-repeat 99% 50% !important;
 }
 .input-red {
-	background: url("../images/icons/publish_n.png") no-repeat right center;
+	background: url("../images/icons/publish_n.png") no-repeat 99% 50% !important;
 }
 
-a#clearCache {
-	background: url("../images/icons/delete.png") no-repeat left center;
-	margin-right: 6px;
-	padding-left: 18px;
+.check-state {
+	display: inline-block;
+	width: 40%;
+}
+
+#start_date, #start_date_period {
+	width: 15% !important;
 }
 
 #start_date + img {
 	cursor: pointer;
 	margin-left: 0.5em;
 	padding-bottom: 4px;
-}
-
-tr.l_pos {
-	display: none;
-}
-
-select#idsite {
-	width: 450px;
 }
 
 .dialog, .dialog .ui-widget {
@@ -85,7 +76,7 @@ select#idsite {
 .separator_parent, .separator_children {
 	border-top: 1px solid #ebebeb;
 	border-bottom: 1px solid #ebebeb;
-	padding: 7px 7px 7px 2px !important;
+	padding: 7px !important;
 }
 
 .separator_parent {
@@ -94,6 +85,13 @@ select#idsite {
 
 .separator_children {
 	background-color: #f5f5f5;
+	margin-top: 0 !important;
+}
+
+.sitename input, .visits input, .views input, .img_size input, .start_date input {
+	display: inline-block !important;
+	margin-bottom: 3px !important;
+	width: 10% !important;
 }
 
 .small {
@@ -114,7 +112,7 @@ a.publish_n {
 	padding-left: 18px;
 }
 
-a.deleteSite {
+.delete-counter {
 	background: url(../images/icons/delete.png) no-repeat left center;
 	padding-left: 18px;
 }
@@ -123,6 +121,7 @@ a.deleteSite {
 	border-right: 1px solid #ccc !important;
 	border-bottom: 1px solid #ccc !important;
 	border-left: 1px solid #ccc !important;
+	z-index: 1001 !important;
 }
 
 #ui-datepicker-div .ui-datepicker-buttonpane {
@@ -136,6 +135,20 @@ a.deleteSite {
 .counters-list table.dataTable th:first-child {
 	border-left: none;
 }
+
+/* BC for Piwik older than 2.14 */
+.form-group label {
+	display: block;
+}
+
+.form-group .radio, .form-group .checkbox {
+	font-size: 12px;
+	line-height: 20px;
+	margin: 6px 0 2px;
+	text-transform: none;
+	width: 40%;
+}
+/* End BC */
 
 /* Color picker */
 .minicolors {
@@ -340,7 +353,7 @@ a.deleteSite {
 
 /* Default theme */
 .minicolors-theme-default .minicolors-swatch {
-	top: 5px;
+	top: 11px;
 	left: 5px;
 	width: 18px;
 	height: 18px;
@@ -354,10 +367,10 @@ a.deleteSite {
 	display: inline-block;
 }
 .minicolors-theme-default .minicolors-input {
-	height: 20px;
+	height: auto;
 	width: auto;
 	display: inline-block;
-	padding-left: 26px;
+	padding-left: 26px !important;
 }
 .minicolors-theme-default.minicolors-position-right .minicolors-input {
 	padding-right: 26px;

@@ -1,5 +1,4 @@
 <script type="text/javascript">
-<!--
 	jQuery(document).ready(function($){
 		$('#c_check').click(function(e){
 			e.preventDefault();
@@ -14,16 +13,20 @@
 				}
 				var dlg = $('<div style="display: none;" class="c-footer-dialog"><p'+style_old+'>{{ 'Counter_Footer_ver_inst'|translate }}{{ plugin_info.info.version }}</p><p'+style_new+'>{{ 'Counter_Footer_ver_remote'|translate }}'+response.version.major+'.'+response.version.minor+'.'+response.version.build+' <a href="http://dl.киноархив.com/others/piwik/plg_counter_'+response.version.major+'.'+response.version.minor+'.'+response.version.build+'.zip"><img src="plugins/Morpheus/images/download.png" border="0" /></a></p></div>').appendTo('body');
 				dlg.dialog({
+					buttons: {
+						'{{ 'General_Close'|translate }}': function(){
+							dlg.dialog('close');
+						}
+					},
 					draggable: false,
 					resizable: false,
 					modal: true,
-					height: 150,
+					height: 160,
 					width: 420
 				});
 			});
 		});
 	});
-// -->
 </script>
 <br />
 <div class="c-footer">

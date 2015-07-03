@@ -1,1 +1,10 @@
+# Auto detect text files and perform LF normalization
+*.js text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.php text eol=lf
+*.twig text eol=lf
+*.md text eol=lf
 
+*.png binary
+*.ttf binary
