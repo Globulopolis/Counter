@@ -214,6 +214,11 @@ class API extends \Piwik\Plugin\API {
 		$sites_manager = SitesManager::getInstance();
 		$access = Access::getInstance();
 		$sites_ids = $sites_manager->getSitesIdWithAdminAccess();
+		$action = Common::getRequestVar('action', '', 'string');
+
+		if ($action == 'show' || $action == 'live') {
+			return true;
+		}
 
 		// Checking the user access rights. If the user not an admin for at least one site when throw an error
 		if (count($sites_ids) <= 0) {
@@ -226,7 +231,6 @@ class API extends \Piwik\Plugin\API {
 				}
 
 				$ids = Common::getRequestVar('id', array(), 'array');
-				$action = Common::getRequestVar('action', '', 'string');
 
 				if (empty($ids) && $action == 'counter_exists') {
 					return true;
