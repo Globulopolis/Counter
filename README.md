@@ -9,6 +9,12 @@ Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text v
 See http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
 
 ## Changelog
+2.0.13
+* Remove initial value checks for visits.
+* Fix extra space in counter code.
+* Fix missing columns in UPDATE query on save()
+* New option to format numbers into human readable format.
+
 2.0.12
 * Fixed error with access rights.
 

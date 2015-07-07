@@ -1,10 +1,10 @@
 <?php
 /**
- * @package		Piwik.Counter.Controller
- * @copyright	Copyright (C) 2010 Libra.ms. All rights reserved.
- * @license		GNU General Public License version 3 or later
- * @url			http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
- * @url			http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
+ * @package        Piwik.Counter.Controller
+ * @copyright    Copyright (C) 2010 Libra.ms. All rights reserved.
+ * @license        GNU General Public License version 3 or later
+ * @url            http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
+ * @url            http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
  */
 namespace Piwik\Plugins\Counter;
 
@@ -19,7 +19,8 @@ use Piwik\Plugins\SitesManager\API as APISitesManager;
 use Piwik\Translation\Translator;
 use Piwik\View;
 
-class Controller extends Plugin\Controller {
+class Controller extends Plugin\Controller
+{
 	/**
 	 * Template name.
 	 *
@@ -34,15 +35,17 @@ class Controller extends Plugin\Controller {
 	 */
 	private $translator;
 
-	public function __construct(Translator $translator) {
+	public function __construct(Translator $translator)
+	{
 		$this->api = API::getInstance();
 		$this->translator = $translator;
 
 		parent::__construct();
 	}
 
-	public function index() {
-		$view = new View('@Counter/'.$this->template.'.twig');
+	public function index()
+	{
+		$view = new View('@Counter/' . $this->template . '.twig');
 		$this->setBasicVariablesView($view);
 		$this->setGeneralVariablesView($view);
 		$view->topMenu = MenuTop::getInstance()->getMenu();
@@ -66,11 +69,13 @@ class Controller extends Plugin\Controller {
 		return $view->render();
 	}
 
-	public function unpublish() {
+	public function unpublish()
+	{
 		$this->publish(0);
 	}
 
-	public function publish($state=1) {
+	public function publish($state = 1)
+	{
 		$ids = Common::getRequestVar('id', array(), 'array');
 		$result = $this->api->publish($ids, $state);
 
@@ -97,7 +102,8 @@ class Controller extends Plugin\Controller {
 		$this->redirectToIndex('Counter', 'index');
 	}
 
-	public function remove() {
+	public function remove()
+	{
 		$ids = Common::getRequestVar('id', array(), 'array');
 		$result = $this->api->remove($ids);
 
@@ -121,7 +127,8 @@ class Controller extends Plugin\Controller {
 		$this->redirectToIndex('Counter', 'index');
 	}
 
-	public function clearCache() {
+	public function clearCache()
+	{
 		$result = $this->api->clearCache(Common::getRequestVar('id', array(), 'array'));
 
 		if (strtolower(Common::getRequestVar('format', '', 'string')) === 'json') {
@@ -138,15 +145,17 @@ class Controller extends Plugin\Controller {
 		$this->redirectToIndex('Counter', 'index');
 	}
 
-	public function counterExists() {
+	public function counterExists()
+	{
 		Json::sendHeaderJSON();
 		echo $this->api->counterExists(Common::getRequestVar('idsite', 0, 'int'));
 	}
 
-	public function add() {
+	public function add()
+	{
 		$this->api->checkAccess();
 
-		$view = new View('@Counter/'.$this->template.'_add.twig');
+		$view = new View('@Counter/' . $this->template . '_add.twig');
 		$this->setBasicVariablesView($view);
 		$this->setGeneralVariablesView($view);
 		$view->topMenu = MenuTop::getInstance()->getMenu();
@@ -166,10 +175,11 @@ class Controller extends Plugin\Controller {
 		return $view->render();
 	}
 
-	public function edit() {
+	public function edit()
+	{
 		$this->api->checkAccess();
 
-		$view = new View('@Counter/'.$this->template.'_edit.twig');
+		$view = new View('@Counter/' . $this->template . '_edit.twig');
 		$this->setBasicVariablesView($view);
 		$this->setGeneralVariablesView($view);
 		$view->topMenu = MenuTop::getInstance()->getMenu();
@@ -189,11 +199,13 @@ class Controller extends Plugin\Controller {
 		return $view->render();
 	}
 
-	public function save() {
+	public function save()
+	{
 		$this->apply('save');
 	}
 
-	public function apply($task='apply') {
+	public function apply($task = 'apply')
+	{
 		$result = $this->api->save();
 
 		if (!$result) {
@@ -214,7 +226,8 @@ class Controller extends Plugin\Controller {
 	 *
 	 * @return  string
 	 */
-	public function checkpath() {
+	public function checkpath()
+	{
 		$this->api->checkAccess();
 
 		clearstatcache();
@@ -225,15 +238,18 @@ class Controller extends Plugin\Controller {
 		echo json_encode(array('success' => $success));
 	}
 
-	public function preview() {
+	public function preview()
+	{
 		$this->api->previewImage();
 	}
 
-	public function show() {
+	public function show()
+	{
 		$this->api->showImage();
 	}
 
-	public function live() {
+	public function live()
+	{
 		$this->api->getLiveVisitorsCount();
 	}
 }

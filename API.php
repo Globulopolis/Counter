@@ -1,10 +1,10 @@
 <?php
 /**
- * @package		Piwik.Counter.API
- * @copyright	Copyright (C) 2010 Libra.ms. All rights reserved.
- * @license		GNU General Public License version 3 or later
- * @url			http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
- * @url			http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
+ * @package        Piwik.Counter.API
+ * @copyright    Copyright (C) 2010 Libra.ms. All rights reserved.
+ * @license        GNU General Public License version 3 or later
+ * @url            http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
+ * @url            http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
  */
 namespace Piwik\Plugins\Counter;
 
@@ -22,13 +22,15 @@ use Zend_Cache;
 /**
  * Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text via ajax requests.
  */
-class API extends \Piwik\Plugin\API {
+class API extends \Piwik\Plugin\API
+{
 	/**
 	 * Method to get a list of counters.
 	 *
 	 * @return  array
 	 */
-	public function getItems() {
+	public function getItems()
+	{
 		$result = $this->getModel()->getItems();
 
 		return $result;
@@ -39,7 +41,8 @@ class API extends \Piwik\Plugin\API {
 	 *
 	 * @return  mixed  Array on success, false otherwise
 	 */
-	public function getItem() {
+	public function getItem()
+	{
 		$id = Common::getRequestVar('id', array(), 'array');
 
 		if (empty($id)) {
@@ -62,7 +65,8 @@ class API extends \Piwik\Plugin\API {
 	 *
 	 * @return  array
 	 */
-	public function getSitesList() {
+	public function getSitesList()
+	{
 		$result = $this->getModel()->getSitesList();
 
 		return $result;
@@ -71,12 +75,13 @@ class API extends \Piwik\Plugin\API {
 	/**
 	 * Method to change the published state of one or more records.
 	 *
-	 * @param   array    $ids    A list of the primary keys to change.
-	 * @param   integer  $state  The value of the published state.
+	 * @param   array $ids A list of the primary keys to change.
+	 * @param   integer $state The value of the published state.
 	 *
 	 * @return  boolean  True on success.
 	 */
-	public function publish($ids, $state=1) {
+	public function publish($ids, $state = 1)
+	{
 		if (empty($ids)) {
 			return false;
 		}
@@ -91,11 +96,12 @@ class API extends \Piwik\Plugin\API {
 	/**
 	 * Remove counter(s) from DB and clear the image cache.
 	 *
-	 * @param    array    $ids   A list of the primary keys to remove.
+	 * @param    array $ids A list of the primary keys to remove.
 	 *
 	 * @return   boolean  True on success.
 	 */
-	public function remove($ids) {
+	public function remove($ids)
+	{
 		if (empty($ids)) {
 			return false;
 		}
@@ -111,11 +117,12 @@ class API extends \Piwik\Plugin\API {
 	/**
 	 * Method to check if counter exists for that site
 	 *
-	 * @param    integer   $idsite   Site ID
+	 * @param    integer $idsite Site ID
 	 *
 	 * @return   string
 	 */
-	public function counterExists($idsite) {
+	public function counterExists($idsite)
+	{
 		if (empty($idsite)) {
 			return json_encode(array('success' => 0));
 		}
@@ -130,11 +137,12 @@ class API extends \Piwik\Plugin\API {
 	 *
 	 * @return   integer   Return lastInsertID or item ID on update
 	 */
-	public function save() {
+	public function save()
+	{
 		$id = Common::getRequestVar('id', array(), 'array');
 		$site_id = Common::getRequestVar('siteid', 0, 'int');
 
-		if (empty($id) || empty($site_id)) {
+		if (empty($site_id)) {
 			return false;
 		}
 
@@ -148,14 +156,15 @@ class API extends \Piwik\Plugin\API {
 	/**
 	 * Enqueue message in the session and display it.
 	 *
-	 * @param    string    $message     The text to display
-	 * @param    string    $style       Style of the message. See CONTEXT_* in core/Notification.php fot valid message styles.
-	 * @param    string    $type        Message type. See TYPE_* in core/Notification.php fot valid message types.
-	 * @param    integer   $priority    Priority. See PRIORITY_* in core/Notification.php fot valid message priorities.
+	 * @param    string $message The text to display
+	 * @param    string $style Style of the message. See CONTEXT_* in core/Notification.php fot valid message styles.
+	 * @param    string $type Message type. See TYPE_* in core/Notification.php fot valid message types.
+	 * @param    integer $priority Priority. See PRIORITY_* in core/Notification.php fot valid message priorities.
 	 *
-	 * @return	void
+	 * @return    void
 	 */
-	public function enqueueMessage($message, $style='info', $type='transient', $priority=0) {
+	public function enqueueMessage($message, $style = 'info', $type = 'transient', $priority = 0)
+	{
 		$notification = new Notification($message);
 
 		switch (strtolower($style)) {
@@ -205,12 +214,13 @@ class API extends \Piwik\Plugin\API {
 	/**
 	 * Check the user access rights
 	 *
-	 * @param   boolean  $is_index   True if counter data requested from frontpage
+	 * @param   boolean $is_index True if counter data requested from frontpage
 	 *
-	 * @return	boolean
+	 * @return    boolean
 	 * @throws  Exception
 	 */
-	public function checkAccess($is_index=false) {
+	public function checkAccess($is_index = false)
+	{
 		$sites_manager = SitesManager::getInstance();
 		$access = Access::getInstance();
 		$sites_ids = $sites_manager->getSitesIdWithAdminAccess();
@@ -240,8 +250,8 @@ class API extends \Piwik\Plugin\API {
 					$login = $access->getLogin();
 
 					$result = Db::fetchAll("SELECT idsite"
-						. "\n FROM ".Common::prefixTable('access')
-						. "\n WHERE idsite IN (SELECT idsite FROM ".Common::prefixTable('counter_sites')." WHERE id IN (".implode(',', $ids).")) AND access = 'admin' AND login = '".$login."'");
+						. "\n FROM " . Common::prefixTable('access')
+						. "\n WHERE idsite IN (SELECT idsite FROM " . Common::prefixTable('counter_sites') . " WHERE id IN (" . implode(',', $ids) . ")) AND access = 'admin' AND login = '" . $login . "'");
 
 					if (count($result) > 0) {
 						return true;
@@ -260,11 +270,12 @@ class API extends \Piwik\Plugin\API {
 	/**
 	 * Clear cache for custom counter
 	 *
-	 * @param    array  $params   An array with the counter data.
+	 * @param    array $params An array with the counter data.
 	 *
 	 * @return   mixed
 	 */
-	private function createImage($params=array()) {
+	private function createImage($params = array())
+	{
 		$id = Common::getRequestVar('id', 0, 'int');
 		$params = count($params) > 0 ? $params : $this->getItem($id);
 		$date_request = Common::getRequestVar('date', '', 'string');
@@ -288,18 +299,18 @@ class API extends \Piwik\Plugin\API {
 		if ($_date == 'day') {
 			$date = date('Y-m-d', mktime(0, 0, 0, date('m'), date('d'), date('Y')));
 		} elseif ($_date == 'yesterday') {
-			$date = date('Y-m-d', mktime(0, 0, 0, date('m'), date('d')-1, date('Y')));
+			$date = date('Y-m-d', mktime(0, 0, 0, date('m'), date('d') - 1, date('Y')));
 		} elseif ($_date == 'week') {
-			$date = date('Y-m-d', mktime(0, 0, 0, date('m'), date('d')-7, date('Y')));
+			$date = date('Y-m-d', mktime(0, 0, 0, date('m'), date('d') - 7, date('Y')));
 		} elseif ($_date == 'month') {
-			$date = date('Y-m-d', mktime(0, 0, 0, date('m')-1, date('d'), date('Y')));
+			$date = date('Y-m-d', mktime(0, 0, 0, date('m') - 1, date('d'), date('Y')));
 		} elseif ($_date == 'year') {
-			$date = date('Y-m-d', mktime(0, 0, 0, date('m'), date('d'), date('Y')-1));
+			$date = date('Y-m-d', mktime(0, 0, 0, date('m'), date('d'), date('Y') - 1));
 		} else {
 			$date = $_date;
 		}
 
-		$request = new Request('method=VisitsSummary.get&idSite='.(int)$params['idsite'].'&period=range&date='.$date.','.date('Y-m-d').'&format=php&serialize=0&token_auth='.$params['params']['token']);
+		$request = new Request('method=VisitsSummary.get&idSite=' . (int)$params['idsite'] . '&period=range&date=' . $date . ',' . date('Y-m-d') . '&format=php&serialize=0&token_auth=' . $params['params']['token']);
 		$result = $request->process();
 
 		$visits = 0;
@@ -328,10 +339,7 @@ class API extends \Piwik\Plugin\API {
 			if ($params['visits'] < 0 && $visits > abs($params['visits'])) {
 				$visits = $visits - abs($params['visits']);
 			} elseif ($params['visits'] > 0) {
-				// Number of visits cannot be more than number of views, so we not change the number of visits
-				if (($visits + abs($params['visits'])) < $views) {
-					$visits = $visits + abs($params['visits']);
-				}
+                $visits = $visits + abs($params['visits']);
 			}
 		}
 
@@ -402,25 +410,25 @@ class API extends \Piwik\Plugin\API {
 				if (!empty($params['title']) && $params['params']['show_sitename'] == 1) {
 					$rgb_arr_sitename = $this->rgb2array($params['params']['color_sitename']);
 					// Text must be only in Latin2!
-					imagestring($src_im, $params['params']['sitename_font_size']-5, $params['params']['sitename_pos_x'], $params['params']['sitename_pos_y']-10, $params['title'], imagecolorallocate($src_im, $rgb_arr_sitename['r'], $rgb_arr_sitename['g'], $rgb_arr_sitename['b']));
+					imagestring($src_im, $params['params']['sitename_font_size'] - 5, $params['params']['sitename_pos_x'], $params['params']['sitename_pos_y'] - 10, $params['title'], imagecolorallocate($src_im, $rgb_arr_sitename['r'], $rgb_arr_sitename['g'], $rgb_arr_sitename['b']));
 				}
 
 				// Draw visits
 				if ($params['params']['show_visits'] == 1) {
 					$rgb_arr_visits = $this->rgb2array($params['params']['color_visits']);
-					imagestring($src_im, $params['params']['visits_font_size']-5, $params['params']['visitors_pos_x'], $params['params']['visitors_pos_y']-10, $data[0], imagecolorallocate($src_im, $rgb_arr_visits['r'], $rgb_arr_visits['g'], $rgb_arr_visits['b']));
+					imagestring($src_im, $params['params']['visits_font_size'] - 5, $params['params']['visitors_pos_x'], $params['params']['visitors_pos_y'] - 10, $data[0], imagecolorallocate($src_im, $rgb_arr_visits['r'], $rgb_arr_visits['g'], $rgb_arr_visits['b']));
 				}
 
 				// Draw views
 				if ($params['params']['show_views'] == 1) {
 					$rgb_arr_views = $this->rgb2array($params['params']['color_views']);
-					imagestring($src_im, $params['params']['hits_font_size']-5, $params['params']['views_pos_x']+5, $params['params']['views_pos_y']-10, $data[1], imagecolorallocate($src_im, $rgb_arr_views['r'], $rgb_arr_views['g'], $rgb_arr_views['b']));
+					imagestring($src_im, $params['params']['hits_font_size'] - 5, $params['params']['views_pos_x'] + 5, $params['params']['views_pos_y'] - 10, $data[1], imagecolorallocate($src_im, $rgb_arr_views['r'], $rgb_arr_views['g'], $rgb_arr_views['b']));
 				}
 			}
 
 			imagecopyresampled($dst_im, $src_im, 0, 0, 0, 0, $params['params']['img_size_x'], $params['params']['img_size_y'], $w, $h);
 
-			header('Content-type: '.$mime);
+			header('Content-type: ' . $mime);
 
 			if ($mime == 'image/png') {
 				imagepng($src_im);
@@ -441,10 +449,11 @@ class API extends \Piwik\Plugin\API {
 	 *
 	 * @return   mixed
 	 */
-	public function showImage() {
+	public function showImage()
+	{
 		$id = Common::getRequestVar('id', 0, 'int');
 		$params = $this->getItem($id);
-		$cache_id = 'counter_image_'.md5($id).'_'.$id;
+		$cache_id = 'counter_image_' . md5($id) . '_' . $id;
 
 		// If the counter has not been published - output an 1x1 transparent gif
 		if ($params['published'] != 1) {
@@ -466,14 +475,14 @@ class API extends \Piwik\Plugin\API {
 					'automatic_serialization' => false
 				),
 				array(
-					'cache_dir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT.DIRECTORY_SEPARATOR.'tmp'.DIRECTORY_SEPARATOR.'cache'.DIRECTORY_SEPARATOR)
+					'cache_dir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR)
 				)
 			);
 
 			// Test if cache is available
 			if ($cache->test($cache_id)) {
 				$mime = $this->getMime($params['params']['img_path']);
-				header('Content-type: '.$mime);
+				header('Content-type: ' . $mime);
 
 				// Load and output image from cache
 				echo $cache->load($cache_id, true);
@@ -494,7 +503,8 @@ class API extends \Piwik\Plugin\API {
 	 *
 	 * @return   mixed
 	 */
-	public function previewImage() {
+	public function previewImage()
+	{
 		$this->checkAccess();
 		@set_time_limit(0);
 		$this->createImage($this->getModel()->getForm());
@@ -503,9 +513,10 @@ class API extends \Piwik\Plugin\API {
 	/**
 	 * Method to get live visitors count
 	 *
-	 * @return	string
+	 * @return    string
 	 */
-	public function getLiveVisitorsCount() {
+	public function getLiveVisitorsCount()
+	{
 		$type = Common::getRequestVar('type', '', 'string');
 		$id = Common::getRequestVar('id', 0, 'int');
 		$params = $this->getItem();
@@ -519,12 +530,12 @@ class API extends \Piwik\Plugin\API {
 				$dom_elem_id = $params['params']['livestat_elem_id'];
 			}
 
-			$data_ajax_url = (array_key_exists('HTTPS', $_SERVER) ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'].'?module=Counter&action=live&id='.$id;
+			$data_ajax_url = (array_key_exists('HTTPS', $_SERVER) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?module=Counter&action=live&id=' . $id;
 
 			header('Content-type: text/javascript');
 
-			echo 'var elem = "'.$dom_elem_id.'", url = "'.$data_ajax_url.'"; function createXHR(){var a;if(window.ActiveXObject){try{a=new ActiveXObject("Microsoft.XMLHTTP")}catch(b){document.getElementById(elem).innerHTML=b.message;a=null}}else{a=new XMLHttpRequest}return a}function sendRequest(){var a=createXHR();a.onreadystatechange=function(){if(a.readyState===4){document.getElementById(elem).innerHTML=a.responseText}};a.open("GET",url,true);a.send()}sendRequest();';
-			echo ($params['params']['static'] == 0) ? 'setInterval(sendRequest, '.(int)$params['params']['check_interval'].');' : '';
+			echo 'var elem = "' . $dom_elem_id . '", url = "' . $data_ajax_url . '"; function createXHR(){var a;if(window.ActiveXObject){try{a=new ActiveXObject("Microsoft.XMLHTTP")}catch(b){document.getElementById(elem).innerHTML=b.message;a=null}}else{a=new XMLHttpRequest}return a}function sendRequest(){var a=createXHR();a.onreadystatechange=function(){if(a.readyState===4){document.getElementById(elem).innerHTML=a.responseText}};a.open("GET",url,true);a.send()}sendRequest();';
+			echo ($params['params']['static'] == 0) ? 'setInterval(sendRequest, ' . (int)$params['params']['check_interval'] . ');' : '';
 		} else {
 			$nbv_m = '';
 			$nbc_m = '';
@@ -550,9 +561,9 @@ class API extends \Piwik\Plugin\API {
 						$format = $start_date;
 					}
 
-					$date_range = $start_date.','.$end_date;
+					$date_range = $start_date . ',' . $end_date;
 				} else {
-					$date_range = $params['params']['start_date'].','.date('Y-m-d'); // default date range
+					$date_range = $params['params']['start_date'] . ',' . date('Y-m-d'); // default date range
 				}
 
 				// Process offsets
@@ -570,10 +581,10 @@ class API extends \Piwik\Plugin\API {
 					preg_match('#\[nb_actions(\soffset="(?P<offset>.+?)")\]#i', $params['params']['tpl_by_countries'], $nba_m);
 				}
 
-				$request = new Request('method=UserCountry.getCountry&idSite='.$params['idsite'].'&period=range&date='.$date_range.'&format=JSON&token_auth='.$params['params']['token']);
+				$request = new Request('method=UserCountry.getCountry&idSite=' . $params['idsite'] . '&period=range&date=' . $date_range . '&format=JSON&token_auth=' . $params['params']['token']);
 				$result = json_decode($request->process());
 			} else {
-				$request = new Request('method=Live.getCounters&idSite='.$params['idsite'].'&lastMinutes='.(int)$params['params']['last_minutes'].'&format=JSON&token_auth='.$params['params']['token']);
+				$request = new Request('method=Live.getCounters&idSite=' . $params['idsite'] . '&lastMinutes=' . (int)$params['params']['last_minutes'] . '&format=JSON&token_auth=' . $params['params']['token']);
 				$result = json_decode($request->process());
 			}
 
@@ -593,7 +604,7 @@ class API extends \Piwik\Plugin\API {
 			if (!function_exists('getallheaders')) {
 				// See http://www.php.net/manual/en/function.getallheaders.php#84262
 				$headers = '';
-				foreach ($_SERVER as $name=>$value) {
+				foreach ($_SERVER as $name => $value) {
 					if (substr($name, 0, 5) == 'HTTP_') {
 						$headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
 					}
@@ -609,7 +620,7 @@ class API extends \Piwik\Plugin\API {
 				$origin = $headers['Origin'];
 
 				if (in_array(preg_replace($protocol, $r, $origin), $params['origins'])) {
-					header('Access-Control-Allow-Origin: '. $origin);
+					header('Access-Control-Allow-Origin: ' . $origin);
 				}
 			}
 
@@ -657,16 +668,16 @@ class API extends \Piwik\Plugin\API {
 				}
 
 				$patterns = array(
-					'nb_visits'    => '#\[nb_visits(.*?)\]#',
+					'nb_visits' => '#\[nb_visits(.*?)\]#',
 					'nb_countries' => '#\[nb_countries(.*?)\]#',
-					'nb_actions'   => '#\[nb_actions(.*?)\]#',
-					'date'         => '#\[date(.*?)\]#'
+					'nb_actions' => '#\[nb_actions(.*?)\]#',
+					'date' => '#\[date(.*?)\]#'
 				);
 				$data = array(
-					'nb_visits'    => $nb_visits,
-					'nb_actions'   => $nb_actions,
+					'nb_visits' => $nb_visits,
+					'nb_actions' => $nb_actions,
 					'nb_countries' => $nb_countries,
-					'date'         => $format
+					'date' => $format
 				);
 				ksort($data);
 				ksort($patterns);
@@ -684,11 +695,12 @@ class API extends \Piwik\Plugin\API {
 	/**
 	 * Clear cache for custom counter
 	 *
-	 * @param    array  $ids   A list of the primary keys.
+	 * @param    array $ids A list of the primary keys.
 	 *
 	 * @return   boolean  True on success.
 	 */
-	public function clearCache($ids) {
+	public function clearCache($ids)
+	{
 		if (empty($ids)) {
 			return false;
 		}
@@ -701,12 +713,12 @@ class API extends \Piwik\Plugin\API {
 		$cache = Zend_Cache::factory('Output', 'File',
 			array(),
 			array(
-				'cache_dir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT.DIRECTORY_SEPARATOR.'tmp'.DIRECTORY_SEPARATOR.'cache'.DIRECTORY_SEPARATOR)
+				'cache_dir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR)
 			)
 		);
 
 		foreach ($ids as $id) {
-			if (!$cache->remove('counter_image_'.md5($id).'_'.$id)) {
+			if (!$cache->remove('counter_image_' . md5($id) . '_' . $id)) {
 				$errors[] = $id;
 			}
 		}
@@ -721,9 +733,10 @@ class API extends \Piwik\Plugin\API {
 	/**
 	 * Get plugin information
 	 *
-	 * @return	array
+	 * @return    array
 	 */
-	public function getPluginInfo() {
+	public function getPluginInfo()
+	{
 		$plugins = Manager::getInstance()->loadAllPluginsAndGetTheirInfo();
 
 		return $plugins['Counter'];
@@ -732,11 +745,12 @@ class API extends \Piwik\Plugin\API {
 	/**
 	 * Method to get proper MIME type
 	 *
-	 * @param   string  $path    Absolute path to file
+	 * @param   string $path Absolute path to file
 	 *
-	 * @return	string
+	 * @return    string
 	 */
-	private function getMime($path) {
+	private function getMime($path)
+	{
 		if (!empty($path) && file_exists($path)) {
 			if (function_exists('finfo_open')) {
 				$finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -765,15 +779,16 @@ class API extends \Piwik\Plugin\API {
 		return $mime;
 	}
 
-	private function formatNumber($number) {
+	private function formatNumber($number)
+	{
 		if ($number > 1000000000000) {
-			$number = round(($number / 1000000000000), 1).'T';
+			$number = round(($number / 1000000000000), 1) . 'T';
 		} else if ($number > 1000000000) {
-			$number = round(($number / 1000000000), 1).'B';
+			$number = round(($number / 1000000000), 1) . 'B';
 		} else if ($number > 1000000) {
-			$number = round(($number / 1000000), 1).'M';
+			$number = round(($number / 1000000), 1) . 'M';
 		} else if ($number > 1000) {
-			$number = round(($number / 1000), 1).'K';
+			$number = round(($number / 1000), 1) . 'K';
 		} else {
 			$number = number_format($number);
 		}
@@ -781,7 +796,8 @@ class API extends \Piwik\Plugin\API {
 		return $number;
 	}
 
-	private function rgb2array($rgb) {
+	private function rgb2array($rgb)
+	{
 		$rgb = str_replace('#', '', $rgb);
 
 		return array(
@@ -791,7 +807,8 @@ class API extends \Piwik\Plugin\API {
 		);
 	}
 
-	private function getModel() {
+	private function getModel()
+	{
 		return new Model();
 	}
 }
