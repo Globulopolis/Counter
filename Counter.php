@@ -38,28 +38,6 @@ class Counter extends Plugin
 	public function activate()
 	{
 		$this->install();
-		//$this->update();
-	}
-
-	public function update()
-	{
-		/*try {
-			$query = "ALTER TABLE `" . Common::prefixTable('counter_sites') . "`"
-				. " ADD COLUMN `visits` INT (11) DEFAULT 0 NOT NULL AFTER `params`,"
-				. " ADD COLUMN `views` INT (11) DEFAULT 0 NOT NULL AFTER `visits`,"
-				. " ADD INDEX `idx_idsite` (`idsite`),"
-				. " ADD INDEX `idx_state` (`published`)";
-
-			Db::exec($query);
-
-		} catch (Exception $e) {
-			if (!Db::get()->isErrNo($e, '1050')) {
-				throw $e;
-			}
-		}*/
-		include_once './Updates/2.0.13.php';
-		$u = new Updates_2_0_13();
-		$u::update();
 	}
 
 	public function install()
