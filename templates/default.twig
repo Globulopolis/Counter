@@ -1,166 +1,166 @@
 {% extends "admin.twig" %}
 {% block content %}
 
-	<script type="text/javascript">
-		function submitform(task) {
-			var form = document.getElementById('countersForm');
+    <script type="text/javascript">
+        function submitform(task) {
+            var form = document.getElementById('countersForm');
 
-			if (jQuery('.id-chk').filter(':checked').length == 0) {
-				jQuery('.addRowCounter').aurora({
-					text: '{{ 'Counter_List_make_selection'|translate }}',
-					leave_only_first: true,
-					container: 'ui-state-error',
-					icon: 'ui-icon-alert',
-					placement: 'after',
-					button: 'close',
-					button_title: '[{{ 'General_Close'|translate }}]'
-				});
+            if (jQuery('.item-checkbox').filter(':checked').length == 0) {
+                jQuery('.addRowCounter').aurora({
+                    text: '{{ 'Counter_List_make_selection'|translate }}',
+                    leave_only_first: true,
+                    container: 'ui-state-error',
+                    icon: 'ui-icon-alert',
+                    placement: 'after',
+                    button: 'close',
+                    button_title: '[{{ 'General_Close'|translate }}]'
+                });
 
-				return false;
-			} else {
-				if (typeof(task) !== 'undefined' && task !== "") {
-					form.action.value = task;
-				}
-				if (typeof form.onsubmit == 'function') {
-					form.onsubmit();
-				}
-				if (typeof form.fireEvent == "function") {
-					form.fireEvent('onsubmit');
-				}
-				if (typeof jQuery == "function") {
-					jQuery(form).submit();
-				}
-				form.submit();
-			}
-		}
+                return false;
+            } else {
+                if (typeof(task) !== 'undefined' && task !== "") {
+                    form.action.value = task;
+                }
+                if (typeof form.onsubmit == 'function') {
+                    form.onsubmit();
+                }
+                if (typeof form.fireEvent == "function") {
+                    form.fireEvent('onsubmit');
+                }
+                if (typeof jQuery == "function") {
+                    jQuery(form).submit();
+                }
+                form.submit();
+            }
+        }
 
-		jQuery(document).ready(function ($) {
-			$('#checkAll').change(function () {
-				if (this.form) {
-					var chk = $(':checkbox', this.form);
+        jQuery(document).ready(function ($) {
+            $('#checkAll').change(function () {
+                $('input:checkbox').prop('checked', $(this).prop('checked'));
+            });
 
-					if (this.checked) {
-						chk.attr('checked', 'checked').closest('.form-checkbox').addClass('checked');
-					} else {
-						chk.removeAttr('checked').closest('.form-checkbox').removeClass('checked');
-					}
-				}
-			});
+            $('.delete-counter').click(function (e) {
+                e.preventDefault();
 
-			$('.delete-counter').click(function (e) {
-				e.preventDefault();
+                var _this = $(this),
+                    dlg = $('#dialog_remove');
 
-				var _this = $(this),
-						dlg = $('#dialog_remove');
+                dlg.dialog({
+                    buttons: {
+                        '{{ 'General_Delete'|translate }}': function () {
+                            $.get(_this.attr('href'), function (response) {
+                                if (response.success == 1) {
+                                    _this.closest('tr').remove();
+                                    dlg.dialog('close');
+                                } else {
+                                    $('p', dlg).remove();
+                                    dlg.aurora({
+                                        text: '{{ 'Counter_Remove_error'|translate }}',
+                                        leave_only_first: true,
+                                        container: 'ui-state-error',
+                                        icon: 'ui-icon-alert'
+                                    });
+                                }
+                            });
+                        },
+                        '{{ 'General_Cancel'|translate }}': function () {
+                            dlg.dialog('close');
+                        }
+                    },
+                    draggable: false,
+                    resizable: false,
+                    modal: true,
+                    height: 150,
+                    width: 420
+                });
+            });
 
-				dlg.dialog({
-					buttons: {
-						'{{ 'General_Delete'|translate }}': function () {
-							$.get(_this.attr('href'), function (response) {
-								if (response.success == 1) {
-									_this.closest('tr').remove();
-									dlg.dialog('close');
-								} else {
-									$('p', dlg).remove();
-									dlg.aurora({
-										text: '{{ 'Counter_Remove_error'|translate }}',
-										leave_only_first: true,
-										container: 'ui-state-error',
-										icon: 'ui-icon-alert'
-									});
-								}
-							});
-						},
-						'{{ 'General_Cancel'|translate }}': function () {
-							dlg.dialog('close');
-						}
-					},
-					draggable: false,
-					resizable: false,
-					modal: true,
-					height: 150,
-					width: 420
-				});
-			});
+            $('.hasTooltip').tooltip({track: true, show: false, hide: false});
+        });
+    </script>
 
-			$('.hasTooltip').tooltip({track: true, show: false, hide: false});
-		});
-	</script>
+    <div class="counters-list">
+        <form action="index.php" method="post" id="countersForm">
+            <h2>{{ 'Counter_Page_main'|translate }}</h2>
 
-	<div class="counters-list">
-		<form action="index.php" method="post" id="countersForm">
-			<h2>{{ 'Counter_Page_main'|translate }}</h2>
+            <div class="addRowCounter">
+                <a href="index.php?module=Counter&action=create&idSite={{ idSite }}&period={{ period }}&date={{ date }}"
+                   class="btn btn-primary">{{ 'Counter_Create'|translate }}</a>
+                <button class="btn btn-primary"
+                        onclick="submitform('publish'); return false;">{{ 'Counter_Publish'|translate }}</button>
+                <button class="btn btn-primary"
+                        onclick="submitform('unpublish'); return false;">{{ 'Counter_Unpublish'|translate }}</button>
+                <button class="btn btn-primary"
+                        onclick="submitform('remove'); return false;">{{ 'Counter_Remove'|translate }}</button>
+                <button class="btn btn-primary"
+                        onclick="submitform('clearCache'); return false;">{{ 'Counter_Params_cache_clear'|translate }}</button>
+            </div>
+            <br/>
 
-			<div class="addRowCounter">
-				<a href="index.php?module=Counter&action=add&idSite={{ idSite }}&period={{ period }}&date={{ date }}"
-				   class="btn btn-primary">{{ 'Counter_Add'|translate }}</a>
-				<button class="btn btn-primary"
-						onclick="submitform('publish'); return false;">{{ 'Counter_Publish'|translate }}</button>
-				<button class="btn btn-primary"
-						onclick="submitform('unpublish'); return false;">{{ 'Counter_Unpublish'|translate }}</button>
-				<button class="btn btn-primary"
-						onclick="submitform('remove'); return false;">{{ 'Counter_Remove'|translate }}</button>
-				<button class="btn btn-primary"
-						onclick="submitform('clearCache'); return false;">{{ 'Counter_Params_cache_clear'|translate }}</button>
-			</div>
-			<br/>
+            <table width="100%" border="0" class="entityTable dataTable">
+                <thead>
+                <tr>
+                    <th width="1%">
+                        <div class="checkbox ng-scope">
+                            <input type="checkbox" name="checkall-toggle" id="checkAll" class="ng-valid ng-dirty ng-valid-parse ng-touched"/>
+                            <label for="checkAll" class="ng-binding"></label>
+                        </div>
+                    </th>
+                    <th>{{ 'Counter_Sitename'|translate }}</th>
+                    <th width="5%">&nbsp;</th>
+                    <th width="5%">{{ 'Counter_Id'|translate }}</th>
+                </tr>
+                </thead>
+                {% if counters|length == 0 %}
+                    <tbody>
+                    <tr>
+                        <td colspan="4">{{ 'Counter_No_items'|translate }}</td>
+                    </tr>
+                    </tbody>
+                {% else %}
+                    <tbody>
+                    {% for data in counters %}
+                        <tr>
+                            <td>
+                                <div class="checkbox ng-scope">
+                                    <input type="checkbox" id="id_{{ data.id }}" name="id[]" class="ng-valid ng-dirty ng-valid-parse ng-touched item-checkbox" value="{{ data.id }}">
+                                    <label for="id_{{ data.id }}" class="ng-binding"></label>
+                                </div>
+                            </td>
+                            <td>
+                                <strong><a href="index.php?module=Counter&action=edit&id[]={{ data.id }}&idSite={{ idSite }}&period={{ period }}&date={{ date }}"
+                                           title="{{ 'Counter_Edit_title'|translate }}">{% if data.title == '' %}{{ 'Counter_Sitename_nositename'|translate }}{% else %}{{ data.title }}{% endif %}</a></strong>
 
-			<table width="100%" border="0" class="entityTable dataTable">
-				<thead>
-				<tr>
-					<th width="1%"><input type="checkbox" name="checkall-toggle" id="checkAll"/></th>
-					<th>{{ 'Counter_Sitename'|translate }}</th>
-					<th width="5%">&nbsp;</th>
-					<th width="5%">{{ 'Counter_Id'|translate }}</th>
-				</tr>
-				</thead>
-				{% if counters|length == 0 %}
-					<tbody>
-					<tr>
-						<td colspan="4">{{ 'Counter_No_items'|translate }}</td>
-					</tr>
-					</tbody>
-				{% else %}
-					<tbody>
-					{% for data in counters %}
-						<tr>
-							<td>
-								<input type="checkbox" name="id[]" value="{{ data.id }}" class="id-chk"/>
-							</td>
-							<td>
-								<strong><a href="index.php?module=Counter&action=edit&id[]={{ data.id }}&idSite={{ idSite }}&period={{ period }}&date={{ date }}"
-										   title="{{ 'Counter_Edit_title'|translate }}">{% if data.title == '' %}{{ 'Counter_Sitename_nositename'|translate }}{% else %}{{ data.title }}{% endif %}</a></strong>
+                                <div class="c-code">{{ 'Counter_Code'|translate }}&lt;img src="{{ server_vars.protocol }}{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=show&{% if data.params.start_date == '' and data.params.start_date_period == 'none' %}date=2010-01-01&{% endif %}id={{ data.id }}" border="0" /&gt;</div>
+                                <div class="c-code-live">{{ 'Counter_Code_live'|translate }}&lt;script type="text/javascript" src="{{ server_vars.protocol }}{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=live&id={{ data.id }}&type=js"&gt;&lt;/script&gt;</div>
+                            </td>
+                            <td valign="top" nowrap="nowrap">
+                                {% if data.published == 1 %}
+                                    <a href="index.php?module=Counter&action=unpublish&id[]={{ data.id }}"
+                                       title="{{ 'Counter_Unpublished'|translate }}" class="hasTooltip publish_y"></a>
+                                {% else %}
+                                    <a href="index.php?module=Counter&action=publish&id[]={{ data.id }}"
+                                       title="{{ 'Counter_Published'|translate }}" class="hasTooltip publish_n"></a>
+                                {% endif %}
+                                <a href="index.php?module=Counter&action=remove&id[]={{ data.id }}&format=JSON"
+                                   title="{{ 'Counter_Delete_title'|translate }}" class="hasTooltip delete-counter"></a>
+                            </td>
+                            <td valign="top"><a
+                                        href="index.php?module=SitesManager&action=index&idSite={{ idSite }}&period={{ period }}&date={{ date }}">{{ data.idsite }}</a>
+                                | {{ data.id }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                {% endif %}
+            </table>
 
-								<div class="c-code">{{ 'Counter_Code'|translate }}&lt;img src="{{ server_vars.protocol }}{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=show&{% if data.params.start_date == '' and data.params.start_date_period == 'none' %}date=2010-01-01&{% endif %}id={{ data.id }}" border="0" /&gt;</div>
-								<div class="c-code-live">{{ 'Counter_Code_live'|translate }}&lt;script type="text/javascript" src="{{ server_vars.protocol }}{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=live&id={{ data.id }}&type=js"&gt;&lt;/script&gt;</div>
-							</td>
-							<td valign="top" nowrap="nowrap">
-								{% if data.published == 1 %}
-									<a href="index.php?module=Counter&action=unpublish&id[]={{ data.id }}"
-									   title="{{ 'Counter_Unpublished'|translate }}" class="hasTooltip publish_y"></a>
-								{% else %}
-									<a href="index.php?module=Counter&action=publish&id[]={{ data.id }}"
-									   title="{{ 'Counter_Published'|translate }}" class="hasTooltip publish_n"></a>
-								{% endif %}
-								<a href="index.php?module=Counter&action=remove&id[]={{ data.id }}&format=JSON"
-								   title="{{ 'Counter_Delete_title'|translate }}" class="hasTooltip delete-counter"></a>
-							</td>
-							<td valign="top"><a
-										href="index.php?module=SitesManager&action=index&idSite={{ idSite }}&period={{ period }}&date={{ date }}">{{ data.idsite }}</a>
-								| {{ data.id }}</td>
-						</tr>
-					{% endfor %}
-					</tbody>
-				{% endif %}
-			</table>
+            <div style="display: none;" id="dialog_remove" class="dialog"
+                 title="{{ 'Counter_Remove_title'|translate }}"><p>{{ 'Counter_Remove_desc'|translate }}</p></div>
 
-			<div style="display: none;" id="dialog_remove" class="dialog"
-				 title="{{ 'Counter_Remove_title'|translate }}"><p>{{ 'Counter_Remove_desc'|translate }}</p></div>
+            <input type="hidden" name="module" value="Counter"/>
+            <input type="hidden" name="action" value=""/>
+        </form>
+    </div>
 
-			<input type="hidden" name="module" value="Counter"/>
-			<input type="hidden" name="action" value=""/>
-		</form>
-	</div>
-
-	{% include '@Counter/default_footer.twig' %}
+    {% include '@Counter/default_footer.twig' %}
 {% endblock %}

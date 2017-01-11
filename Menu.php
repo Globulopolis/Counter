@@ -14,10 +14,10 @@ use Piwik\Piwik;
 
 class Menu extends \Piwik\Plugin\Menu
 {
-	public function configureAdminMenu(MenuAdmin $menu)
-	{
-		if (Piwik::isUserHasSomeAdminAccess()) {
-			$menu->addSettingsItem('Counter_Settings', $this->urlForAction('index'), 10);
-		}
-	}
+    public function configureAdminMenu(MenuAdmin $menu)
+    {
+        if (Piwik::isUserHasSomeAdminAccess()) {
+            $menu->addPlatformItem('Counter_Settings', $this->urlForAction('index'), 10);
+        }
+    }
 }

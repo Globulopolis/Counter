@@ -3,513 +3,559 @@
 
 {% block content %}
 
-	<script type="text/javascript" src="plugins/Counter/assets/js/minicolors.min.js"></script>
-	<script type="text/javascript">
-		jQuery(document).ready(function ($) {
-			$('.color-picker').each(function () {
-				$(this).minicolors({
-					control: $(this).attr('data-control') || 'hue',
-					defaultValue: $(this).attr('data-defaultValue') || '',
-					letterCase: $(this).attr('data-letterCase') || 'lowercase',
-					opacity: $(this).attr('data-opacity'),
-					position: $(this).attr('data-position') || 'bottom left',
-					theme: 'default'
-				});
-			});
-			$('.go_back').click(function () {
-				window.location.href = 'index.php?module=Counter&action=index&idSite={{ idSite }}&period={{ period }}&date={{ date }}';
-			});
-			$('input.paths').blur(function () {
-				var elem = $(this);
-				elem.removeClass('input-green input-red');
-
-				if (elem.val() != '') {
-					$.getJSON('index.php?module=Counter&action=checkpath&format=JSON', {'path': elem.val()}, function (response) {
-						if (response.success == 1) {
-							elem.addClass('input-green');
-						} else {
-							elem.removeClass('input-green').addClass('input-red');
-						}
-					});
-				} else {
-					elem.removeClass('input-green').addClass('input-red');
-					elem.next().empty().text('{{ 'Counter_Path_empty'|translate }}');
-				}
-			});
-			$('#start_date').datepicker({
-				showButtonPanel: true,
-				changeMonth: true,
-				changeYear: true,
-				showOn: 'both',
-				buttonImage: 'plugins/Morpheus/images/icon-calendar.gif',
-				buttonImageOnly: true,
-				dateFormat: 'yy-mm-dd',
-				onSelect: function (date) {
-					$('#start_date_period option').eq(0).prop('selected', 'selected');
-				}
-			});
-			$('.save, .apply').prop('disabled', 'disabled');
-			$('#idsite').change(function () {
-				var _this = $(this);
-
-				if (this.value != 0) {
-					$('#start_date').val('');
-					_this.attr('disabled', true);
-					$.ajax({
-						url: 'index.php?module=Counter&action=counterExists&idsite=' + this.value + '&format=JSON',
-						cache: false,
-						dataType: 'json'
-					}).done(function (response) {
-						if (response.success == 0) {
-							$('span.check-state').aurora({
-								text: '{{ 'Counter_Counter_exists'|translate }}',
-								leave_only_first: true,
-								container: 'ui-state-error',
-								icon: 'ui-icon-alert',
-								placement: 'prepend',
-								button: 'close',
-								button_title: '[{{ 'General_Close'|translate }}]',
-								onComplete: function () {
-									_this.attr('disabled', false);
-								}
-							});
-							$('.save, .apply').prop('disabled', 'disabled');
-						} else {
-							var start_date = $('#start_date');
-							if (start_date.val() == '') {
-								start_date.val(response.ts_created);
-							}
-							$('.save, .apply').removeProp('disabled');
-							_this.attr('disabled', false);
-							$('body').aurora.destroy({indexes: 'all'});
-						}
-					}).fail(function (jqxhr, textStatus, error) {
-						$('span.check-state').aurora({
-							text: '{{ 'Counter_Error_has_occurred'|translate }}',
-							leave_only_first: true,
-							container: 'ui-state-error',
-							icon: 'ui-icon-alert',
-							placement: 'prepend',
-							button: 'close',
-							button_title: '[{{ 'General_Close'|translate }}]'
-						});
-					});
-				} else {
-					$('.save, .apply').prop('disabled', 'disabled');
-				}
-			}).trigger('change');
-			$('#start_date_period').change(function () {
-				if ($('option', this).filter(':selected').val() != 'none') {
-					$('#start_date').val('');
-					if ($('option', this).filter(':selected').val() == 'day') {
-						$('#cache_time').val('86400');
-					}
-				}
-			}).trigger('change');
-
-			$('#cache_time').blur(function () {
-				if ($('#start_date_period option').filter(':selected').val() != 'none' && $(this).val() > 86400) {
-					$(this).val('86400');
-				}
-			});
-			$('.save').click(function () {
-				$('#action').val('save');
-				$('#adminForm').submit();
-			});
-			$('.apply').click(function () {
-				$('#action').val('apply');
-				$('#adminForm').submit();
-			});
-		});
-	</script>
-
-	<div>
-		<h2>
-			<a href="index.php?module=Counter&action=index&idSite=1&period=day&date=yesterday">{{ 'Counter_Page_main'|translate }}</a> &bull; {{ 'Counter_Add'|translate }}
-		</h2>
-
-		<form action="index.php" method="post" id="adminForm" autocomplete="off">
-			<p class="ng-binding"><label for="idsite">{{ 'Counter_Params_site'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_site_desc'|translate|raw }}</div>
-				</div>
-				<select name="siteid" id="idsite" class="ng-isolate-scope ng-pristine ng-valid">
-					<option value="0">{{ 'Counter_Params_siteselect'|translate }}</option>
-					{% for site in list_sites %}
-						<option value="{{ site.idsite }}">{{ site.idsite }} - {{ site.name }}</option>
-					{% endfor %}
-				</select>
-				<span class="check-state"></span>
-			</div>
-
-			<p class="ng-binding"><label for="title">{{ 'Counter_Params_sitename'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_sitename_desc'|translate }}</div>
-				</div>
-				<input type="text" name="title" id="title" size="70" maxlength="50" required/>
-			</div>
-
-			<p class="ng-binding"><label for="start_date">{{ 'Counter_Params_datestart'|translate }}</label></p>
-
-			<div class="form-group start_date">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_datestart_desc'|translate|raw }}</div>
-				</div>
-				<a name="date_global"></a>
-				<input type="text" name="start_date" value="" id="start_date" size="11" maxlength="10"/>
-				<label for="start_date_period">{{ 'Counter_Params_datestart_period'|translate }}</label>
-				<select name="start_date_period" id="start_date_period">
-					<option value="none">-</option>
-					<option value="day">{{ 'CoreHome_PeriodDay'|translate }}</option>
-					<option value="yesterday">{{ 'General_Yesterday'|translate }}</option>
-					<option value="week">{{ 'CoreHome_PeriodWeek'|translate }}</option>
-					<option value="month">{{ 'CoreHome_PeriodMonth'|translate }}</option>
-					<option value="year">{{ 'CoreHome_PeriodYear'|translate }}</option>
-				</select>
-			</div>
-
-			<p class="ng-binding"><label for="visits">{{ 'Counter_Params_visits_label'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visits_desc'|translate }}</div>
-				</div>
-				<input type="text" name="visits" value="0" id="visits" size="70" maxlength="11" />
-			</div>
-
-			<p class="ng-binding"><label for="views">{{ 'Counter_Params_views_label'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_views_desc'|translate }}</div>
-				</div>
-				<input type="text" name="views" value="0" id="views" size="70" maxlength="11" />
-			</div>
-
-			<p class="ng-binding"><label for="pub">{{ 'Counter_Params_format_numbers_label'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_format_numbers_desc'|translate }}</div>
-				</div>
-				<label class="radio">
-					<input type="radio" name="format_numbers" value="1" />
-					{{ 'General_Yes'|translate }}
-				</label>
-				<label class="radio">
-					<input type="radio" name="format_numbers" value="0" checked="checked" />
-					{{ 'General_No'|translate }}
-				</label>
-			</div>
-
-			<p class="ng-binding"><label for="pub">{{ 'Counter_Params_publish'|translate }}</label></p>
-
-			<div class="form-group">
-				<label class="radio">
-					<input type="radio" name="published" value="1" checked="checked"/>
-					{{ 'General_Yes'|translate }}
-				</label>
-				<label class="radio">
-					<input type="radio" name="published" value="0"/>
-					{{ 'General_No'|translate }}
-				</label>
-			</div>
-
-			<p class="separator_parent"><strong>{{ 'Counter_Params_pos_sep'|translate }}</strong></p>
-
-			<p class="separator_children"><strong>{{ 'Counter_Params_pos_sep_sitename'|translate }}</strong></p>
-
-			<p class="ng-binding"><label for="show_sitename">{{ 'Counter_Params_show_sitename'|translate }}</label></p>
-
-			<div class="form-group">
-				<label class="radio">
-					<input type="radio" name="show_sitename" value="1" checked="checked"/>
-					{{ 'General_Yes'|translate }}
-				</label>
-				<label class="radio">
-					<input type="radio" name="show_sitename" value="0"/>
-					{{ 'General_No'|translate }}
-				</label>
-			</div>
-
-			<p class="ng-binding"><label
-						for="sitename_pos_x">{{ 'Counter_Params_sitename_pos_label'|translate }}</label></p>
-
-			<div class="form-group sitename">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
-				</div>
-				<input type="text" name="sitename_pos_x" value="3" id="sitename_pos_x" size="4"
-					   maxlength="3"/>{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}
-				<br/>
-				<input type="text" name="sitename_pos_y" value="13" id="sitename_pos_y" size="4" maxlength="3"
-					   required/>{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
-			</div>
-
-			<p class="ng-binding"><label for="color_sitename">{{ 'Counter_Params_colors_sitename'|translate }}</label>
-			</p>
-
-			<div class="form-group">
-				<input type="text" name="color_sitename" value="#03374A" id="color_sitename" size="7" maxlength="6"
-					   class="color-picker" required/>
-			</div>
-
-			<p class="ng-binding"><label for="sitename_font_size">{{ 'Counter_Params_fontsize'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
-				</div>
-				<input type="text" name="sitename_font_size" value="7" id="sitename_font_size" size="3" maxlength="2"
-					   required/>
-			</div>
-
-			<p class="separator_children"><strong>{{ 'Counter_Params_pos_sep_visits'|translate }}</strong></p>
-
-			<p class="ng-binding"><label for="show_visits">{{ 'Counter_Params_show_visits'|translate }}</label></p>
-
-			<div class="form-group">
-				<label class="radio">
-					<input type="radio" name="show_visits" value="1" checked="checked"/>
-					{{ 'General_Yes'|translate }}
-				</label>
-				<label class="radio">
-					<input type="radio" name="show_visits" value="0"/>
-					{{ 'General_No'|translate }}
-				</label>
-			</div>
-
-			<p class="ng-binding"><label
-						for="visitors_pos_x">{{ 'Counter_Params_visitors_pos_label'|translate }}</label></p>
-
-			<div class="form-group visits">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
-				</div>
-				<input type="text" name="visitors_pos_x" value="3" id="visitors_pos_x" size="4" maxlength="3"
-					   required/>{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}
-				<br/>
-				<input type="text" name="visitors_pos_y" value="13" id="visitors_pos_y" size="4" maxlength="3"
-					   required/>{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
-			</div>
-
-			<p class="ng-binding"><label for="color_visits">{{ 'Counter_Params_colors_visits'|translate }}</label></p>
-
-			<div class="form-group">
-				<input type="text" name="color_visits" value="#F16045" id="color_visits" size="7" maxlength="6"
-					   class="color-picker" required/>
-			</div>
-
-			<p class="ng-binding"><label for="visits_font_size">{{ 'Counter_Params_fontsize'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
-				</div>
-				<input type="text" name="visits_font_size" value="7" id="visits_font_size" size="3" maxlength="2"
-					   required/>
-			</div>
-
-			<p class="separator_children"><strong>{{ 'Counter_Params_pos_sep_hits'|translate }}</strong></p>
-
-			<p class="ng-binding"><label for="show_views">{{ 'Counter_Params_show_views'|translate }}</label></p>
-
-			<div class="form-group">
-				<label class="radio">
-					<input type="radio" name="show_views" value="1" checked="checked"/>
-					{{ 'General_Yes'|translate }}
-				</label>
-				<label class="radio">
-					<input type="radio" name="show_views" value="0"/>
-					{{ 'General_No'|translate }}
-				</label>
-			</div>
-
-			<p class="ng-binding"><label for="views_pos_x">{{ 'Counter_Params_views_pos_label'|translate }}</label></p>
-
-			<div class="form-group views">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
-				</div>
-				<input type="text" name="views_pos_x" value="3" id="views_pos_x" size="4" maxlength="3"
-					   required/>{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}
-				<br/>
-				<input type="text" name="views_pos_y" value="13" id="views_pos_y" size="4" maxlength="3"
-					   required/>{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
-			</div>
-
-			<p class="ng-binding"><label for="color_views">{{ 'Counter_Params_colors_views'|translate }}</label></p>
-
-			<div class="form-group">
-				<input type="text" name="color_views" value="#E07A52" id="color_views" size="7" maxlength="6"
-					   class="color-picker" required/>
-			</div>
-
-			<p class="ng-binding"><label for="hits_font_size">{{ 'Counter_Params_fontsize'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
-				</div>
-				<input type="text" name="hits_font_size" value="7" id="hits_font_size" size="3" maxlength="2" required/>
-			</div>
-
-			<p class="separator_parent">&nbsp;</p>
-
-			<p class="ng-binding"><label for="img_size">{{ 'Counter_Params_img_size'|translate }}</label></p>
-
-			<div class="form-group img_size">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_img_size_desc'|translate }}</div>
-				</div>
-				<input type="text" name="img_size_x" value="80" id="img_size_x" size="4" maxlength="3" required/>&nbsp;x&nbsp;
-				<input type="text" name="img_size_y" value="31" id="img_size_y" size="4" maxlength="3"
-					   required/>{{ 'Counter_Params_img_size_px'|translate }}
-			</div>
-
-			<p class="ng-binding"><label for="img_path">{{ 'Counter_Params_img_path'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_img_path_desc'|translate }}</div>
-				</div>
-				<input type="text" name="img_path" value="plugins/Counter/assets/images/counter.png" id="img_path"
-					   class="paths" size="70"/>
-				<span>&nbsp;</span>
-			</div>
-
-			<p class="ng-binding"><label for="font_path">{{ 'Counter_Params_fontpath'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_fontpath_desc'|translate }}</div>
-				</div>
-				<input type="text" name="font_path" value="plugins/Counter/assets/fonts/OpenSans-Regular.ttf"
-					   id="font_path" class="paths" size="70"/>
-				<span>&nbsp;</span>
-			</div>
-
-			<p class="ng-binding"><label for="cache">{{ 'Counter_Params_cache'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_cache_off'|translate }}</div>
-				</div>
-				<label class="radio">
-					<input type="radio" name="cache" value="1" checked="checked"/>
-					{{ 'General_Yes'|translate }}
-				</label>
-				<label class="radio">
-					<input type="radio" name="cache" value="0"/>
-					{{ 'General_No'|translate }}
-				</label>
-				<span id="cache"></span>
-			</div>
-
-			<p class="ng-binding"><label for="cache_time">{{ 'Counter_Params_cache_time'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_cache_time_desc'|translate }}</div>
-				</div>
-				<div class="input-group">
-					<input type="text" name="cache_time" value="900" id="cache_time" size="7" maxlength="7" required/>
-					<span class="input-group-addon"> {{ 'Counter_Seconds'|translate }}</span>
-				</div>
-			</div>
-
-			<p class="ng-binding"><label for="token">{{ 'Counter_Params_token_auth'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_token_auth_desc'|translate }}</div>
-				</div>
-				<input type="text" name="token" id="token" size="70" maxlength="64" required/>
-			</div>
-
-			<p class="separator_parent"><strong>{{ 'Counter_Params_live_sep'|translate }}</strong></p>
-
-			<p class="ng-binding"><label for="last_minutes">{{ 'Counter_Params_live_period'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="input-group">
-					<input type="text" name="last_minutes" value="30" id="last_minutes" size="4" maxlength="3"/>
-					<span class="input-group-addon"> {{ 'Counter_Minutes'|translate }}</span>
-				</div>
-			</div>
-
-			<p class="ng-binding"><label for="check_interval">{{ 'Counter_Params_live_interval'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_live_interval_desc'|translate }}</div>
-				</div>
-				<div class="input-group">
-					<input type="text" name="check_interval" value="10000" id="check_interval" size="7" maxlength="6"/>
-					<span class="input-group-addon"> {{ 'Counter_Mseconds'|translate }}</span>
-				</div>
-			</div>
-
-			<p class="ng-binding"><label>{{ 'Counter_Params_live_static'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_live_static_desc'|translate }}</div>
-				</div>
-				<label class="radio">
-					<input type="radio" name="static" value="1" checked="checked"/>
-					{{ 'General_Yes'|translate }}
-				</label>
-				<label class="radio">
-					<input type="radio" name="static" value="0"/>
-					{{ 'General_No'|translate }}
-				</label>
-			</div>
-
-			<p class="ng-binding"><label for="livestat_elem_id">{{ 'Counter_Params_live_elemid'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_live_elemid_desc'|translate|raw }}</div>
-				</div>
-				<input type="text" name="livestat_elem_id" id="livestat_elem_id" size="70"/>
-			</div>
-
-			<p class="separator_parent"><strong>{{ 'Counter_Params_tpl_by_countries_sep'|translate }}</strong></p>
-
-			<p class="ng-binding"><label
-						for="tpl_by_countries">{{ 'Counter_Params_tpl_by_countries'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_tpl_by_countries_desc'|translate|raw }}</div>
-				</div>
-				<textarea name="tpl_by_countries" id="tpl_by_countries" cols="50" rows="5"
-						  spellcheck="false"></textarea>
-			</div>
-
-			<p class="ng-binding"><label
-						for="tpl_by_countries_elem_id">{{ 'Counter_Params_live_elemid'|translate }}</label></p>
-
-			<div class="form-group">
-				<div class="ng-scope">
-					<div class="form-help ng-binding ng-scope">{{ 'Counter_Params_live_elemid_desc'|translate|raw }}</div>
-				</div>
-				<input type="text" name="tpl_by_countries_elem_id" id="tpl_by_countries_elem_id" size="70"/>
-			</div>
-
-			<input type="hidden" name="module" value="Counter"/>
-			<input type="hidden" name="action" value="" id="action"/>
-
-			<input type="button" value="{{ 'General_Save'|translate }}" class="btn save"/>
-			<input type="button" value="{{ 'Counter_Apply'|translate }}" class="btn apply"/>
-			<input type="button" value="{{ 'General_Close'|translate }}" class="btn go_back"/>
-		</form>
-	</div>
-
-	{% include '@Counter/default_footer.twig' %}
+    <script type="text/javascript" src="plugins/Counter/assets/js/minicolors.min.js"></script>
+    <script type="text/javascript">
+        jQuery(document).ready(function ($) {
+            $('.color-picker').each(function () {
+                $(this).minicolors({
+                    control: $(this).attr('data-control') || 'hue',
+                    defaultValue: $(this).attr('data-defaultValue') || '',
+                    letterCase: $(this).attr('data-letterCase') || 'lowercase',
+                    opacity: $(this).attr('data-opacity'),
+                    position: $(this).attr('data-position') || 'bottom left',
+                    theme: 'default'
+                });
+            });
+            $('.go_back').click(function () {
+                window.location.href = 'index.php?module=Counter&action=index&idSite={{ idSite }}&period={{ period }}&date={{ date }}';
+            });
+            $('input.paths').blur(function () {
+                var elem = $(this);
+                elem.removeClass('input-green input-red');
+
+                if (elem.val() != '') {
+                    $.post('index.php?module=API&method=Counter.checkPath&format=JSON', {'path': elem.val()}, function (response) {
+                        if (response.value) {
+                            elem.addClass('input-green');
+                        } else {
+                            elem.removeClass('input-green').addClass('input-red');
+                        }
+                    });
+                } else {
+                    elem.removeClass('input-green').addClass('input-red');
+                    elem.next().empty().text('{{ 'Counter_Path_empty'|translate }}');
+                }
+            });
+            $('#start_date').datepicker({
+                showButtonPanel: true,
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd',
+                onSelect: function (date) {
+                    $('#start_date_period option').eq(0).prop('selected', 'selected');
+                }
+            });
+
+            $('#idsite').change(function () {
+                var _this = $(this);
+
+                if (this.value != 0) {
+                    _this.attr('disabled', true);
+
+                    $.ajax({
+                        url: 'index.php?module=API&method=Counter.counterExists&idsite=' + this.value + '&format=JSON',
+                        cache: false,
+                        dataType: 'json'
+                    }).done(function (response) {
+                        if (response.value) {
+                            $('span.check-state').aurora({
+                                text: '{{ 'Counter_Counter_exists'|translate }}',
+                                leave_only_first: true,
+                                container: 'ui-state-error',
+                                icon: 'ui-icon-alert',
+                                placement: 'prepend',
+                                button: 'close',
+                                button_title: '[{{ 'General_Close'|translate }}]',
+                                onComplete: function () {
+                                    _this.attr('disabled', false);
+                                }
+                            });
+                        } else {
+                            _this.attr('disabled', false);
+                            $('body').aurora.destroy({indexes: 'all'});
+                        }
+                    }).fail(function (jqxhr, textStatus, error) {
+                        $('span.check-state').aurora({
+                            text: '{{ 'Counter_Error_has_occurred'|translate }}',
+                            leave_only_first: true,
+                            container: 'ui-state-error',
+                            icon: 'ui-icon-alert',
+                            placement: 'prepend',
+                            button: 'close',
+                            button_title: '[{{ 'General_Close'|translate }}]'
+                        });
+                    });
+                }
+            }).trigger('change');
+            $('#start_date_period').change(function () {
+                if ($('option', this).filter(':selected').val() != 'none') {
+                    $('#start_date').val('');
+                    if ($('option', this).filter(':selected').val() == 'day') {
+                        $('#cache_time').val('86400');
+                    }
+                }
+            }).trigger('change');
+
+            $('#cache_time').blur(function () {
+                if ($('#start_date_period option:selected').val() != 'none' && $(this).val() > 86400) {
+                    $(this).val('86400');
+                }
+            });
+            $('.save').click(function () {
+                $('#action').val('save');
+                $('#adminForm').submit();
+            });
+            $('.apply').click(function () {
+                $('#action').val('apply');
+                $('#adminForm').submit();
+            });
+        });
+    </script>
+
+<div class="card ng-isolate-scope" style="margin-top: 0;">
+    <div class="card-content">
+        <h2>
+            <a href="index.php?module=Counter&action=index&idSite=1&period=day&date=yesterday">{{ 'Counter_Page_main'|translate }}</a> &bull; {{ 'Counter_Create'|translate }}
+        </h2>
+
+        <form action="index.php" method="post" id="adminForm" autocomplete="off">
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <select name="siteid" id="idsite" class="ng-isolate-scope ng-pristine ng-valid" required>
+                        <option value="0">{{ 'Counter_Params_siteselect'|translate }}</option>
+                        {% for site in list_sites %}
+                            <option value="{{ site.idsite }}">{{ site.idsite }} - {{ site.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="idsite">{{ 'Counter_Params_site'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_site_desc'|translate|raw }}</div>
+                </div>
+
+                <div class="clearfix visible-xs-block"></div>
+                <span class="check-state"></span>
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="title" id="title" size="70" maxlength="50"/>
+                    <label for="title">{{ 'Counter_Params_sitename'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_sitename_desc'|translate }}</div>
+                </div>
+            </div>
+
+            <div class="form-group row start_date">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="start_date" value="" id="start_date" size="11" maxlength="10"/>
+                    <label for="start_date">{{ 'Counter_Params_datestart'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_datestart_desc'|translate|raw }}</div>
+                </div>
+                <div class="input-field col s12 m6">
+                    <select name="start_date_period" id="start_date_period">
+                        <option value="none">-</option>
+                        <option value="day">{{ 'CoreHome_PeriodDay'|translate }}</option>
+                        <option value="yesterday">{{ 'General_Yesterday'|translate }}</option>
+                        <option value="week">{{ 'CoreHome_PeriodWeek'|translate }}</option>
+                        <option value="month">{{ 'CoreHome_PeriodMonth'|translate }}</option>
+                        <option value="year">{{ 'CoreHome_PeriodYear'|translate }}</option>
+                    </select>
+                    <label for="start_date_period">{{ 'Counter_Params_datestart_period'|translate }}</label>
+                </div>
+
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="visits" value="0" id="visits" size="70" maxlength="11" />
+                    <label for="visits">{{ 'Counter_Params_visits_label'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visits_desc'|translate }}</div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="views" value="0" id="views" size="70" maxlength="11" />
+                    <label for="views">{{ 'Counter_Params_views_label'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_views_desc'|translate }}</div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <h3 class="col s12">{{ 'Counter_Params_format_numbers_label'|translate }}</h3>
+
+                <div class="col s12 m6">
+                    <p>
+                        <input type="radio" name="format_numbers" id="format_numbers_y" value="1" />
+                        <label class="radio" for="format_numbers_y">{{ 'General_Yes'|translate }}</label>
+                    </p>
+
+                    <p>
+                        <input type="radio" name="format_numbers" id="format_numbers_n" value="0" checked="checked" />
+                        <label class="radio" for="format_numbers_n">{{ 'General_No'|translate }}</label>
+                    </p>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_format_numbers_desc'|translate }}</div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <h3 class="col s12">{{ 'Counter_Params_publish'|translate }}</h3>
+
+                <div class="col s12 m6">
+                    <p>
+                        <input type="radio" name="published" id="published_y" value="1" checked="checked" />
+                        <label class="radio" for="published_y">{{ 'General_Yes'|translate }}</label>
+                    </p>
+
+                    <p>
+                        <input type="radio" name="published" id="published_n" value="0" />
+                        <label class="radio" for="published_n">{{ 'General_No'|translate }}</label>
+                    </p>
+                </div>
+            </div>
+
+            <p class="separator_parent"><strong>{{ 'Counter_Params_pos_sep'|translate }}</strong></p>
+            <p class="separator_children"><strong>{{ 'Counter_Params_pos_sep_sitename'|translate }}</strong></p>
+
+            <div class="form-group row">
+                <h3 class="col s12">{{ 'Counter_Params_show_sitename'|translate }}</h3>
+
+                <div class="col s12 m6">
+                    <p>
+                        <input type="radio" name="show_sitename" id="show_sitename_y" value="1" checked="checked" />
+                        <label class="radio" for="show_sitename_y">{{ 'General_Yes'|translate }}</label>
+                    </p>
+
+                    <p>
+                        <input type="radio" name="show_sitename" id="show_sitename_n" value="0" />
+                        <label class="radio" for="show_sitename_n">{{ 'General_No'|translate }}</label>
+                    </p>
+                </div>
+            </div>
+
+            <div class="form-group row sitename">
+                <h3 class="col s12">{{ 'Counter_Params_sitename_pos_label'|translate }}</h3>
+
+                <div class="input-field col s12 m6">
+                    <input type="text" name="sitename_pos_x" value="3" id="sitename_pos_x" size="4" maxlength="3"/>
+                    {{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
+                </div>
+
+                <div class="clearfix visible-xs-block"></div>
+
+                <div class="input-field col s12 m6">
+                    <input type="text" name="sitename_pos_y" value="13" id="sitename_pos_y" size="4" maxlength="3" required/>
+                    {{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="color_sitename" value="#03374A" id="color_sitename" size="7" maxlength="6"
+                           class="color-picker" required/>
+                    <label for="color_sitename">{{ 'Counter_Params_colors_sitename'|translate }}</label>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="sitename_font_size" value="7" id="sitename_font_size" size="3" maxlength="2"
+                           required/>
+                    <label for="sitename_font_size">{{ 'Counter_Params_fontsize'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
+                </div>
+            </div>
+
+            <p class="separator_children"><strong>{{ 'Counter_Params_pos_sep_visits'|translate }}</strong></p>
+
+            <div class="form-group row">
+                <h3 class="col s12">{{ 'Counter_Params_show_visits'|translate }}</h3>
+
+                <div class="col s12 m6">
+                    <p>
+                        <input type="radio" name="show_visits" id="show_visits_y" value="1" checked="checked" />
+                        <label class="radio" for="show_visits_y">{{ 'General_Yes'|translate }}</label>
+                    </p>
+
+                    <p>
+                        <input type="radio" name="show_visits" id="show_visits_n" value="0" />
+                        <label class="radio" for="show_visits_n">{{ 'General_No'|translate }}</label>
+                    </p>
+                </div>
+            </div>
+
+            <div class="form-group row sitename">
+                <h3 class="col s12">{{ 'Counter_Params_visitors_pos_label'|translate }}</h3>
+
+                <div class="input-field col s12 m6">
+                    <input type="text" name="visitors_pos_x" value="3" id="visitors_pos_x" size="4" maxlength="3" required/>
+                    {{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
+                </div>
+
+                <div class="clearfix visible-xs-block"></div>
+
+                <div class="input-field col s12 m6">
+                    <input type="text" name="visitors_pos_y" value="13" id="visitors_pos_y" size="4" maxlength="3" required/>
+                    {{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="color_visits" value="#F16045" id="color_visits" size="7" maxlength="6"
+                           class="color-picker" required/>
+                    <label for="color_visits">{{ 'Counter_Params_colors_visits'|translate }}</label>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="visits_font_size" value="7" id="visits_font_size" size="3" maxlength="2"
+                           required/>
+                    <label for="visits_font_size">{{ 'Counter_Params_fontsize'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
+                </div>
+            </div>
+
+            <p class="separator_children"><strong>{{ 'Counter_Params_pos_sep_hits'|translate }}</strong></p>
+
+            <div class="form-group row">
+                <h3 class="col s12">{{ 'Counter_Params_show_views'|translate }}</h3>
+
+                <div class="col s12 m6">
+                    <p>
+                        <input type="radio" name="show_views" id="show_views_y" value="1" checked="checked" />
+                        <label class="radio" for="show_views_y">{{ 'General_Yes'|translate }}</label>
+                    </p>
+
+                    <p>
+                        <input type="radio" name="show_views" id="show_views_n" value="0" />
+                        <label class="radio" for="show_views_n">{{ 'General_No'|translate }}</label>
+                    </p>
+                </div>
+            </div>
+
+            <div class="form-group row views">
+                <h3 class="col s12">{{ 'Counter_Params_views_pos_label'|translate }}</h3>
+
+                <div class="input-field col s12 m6">
+                    <input type="text" name="views_pos_x" value="3" id="views_pos_x" size="4" maxlength="3" required/>
+                    {{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
+                </div>
+
+                <div class="clearfix visible-xs-block"></div>
+
+                <div class="input-field col s12 m6">
+                    <input type="text" name="views_pos_y" value="13" id="views_pos_y" size="4" maxlength="3" required/>
+                    {{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="color_views" value="#E07A52" id="color_views" size="7" maxlength="6"
+                           class="color-picker" required/>
+                    <label for="color_views">{{ 'Counter_Params_colors_views'|translate }}</label>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="hits_font_size" value="7" id="hits_font_size" size="3" maxlength="2"
+                           required/>
+                    <label for="hits_font_size">{{ 'Counter_Params_fontsize'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
+                </div>
+            </div>
+
+            <p class="separator_parent">&nbsp;</p>
+
+            <div class="form-group row img_size">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="img_size_x" value="80" id="img_size_x" size="4" maxlength="3" required/>&nbsp;x&nbsp;
+                    <input type="text" name="img_size_y" value="31" id="img_size_y" size="4" maxlength="3"
+                           required/>{{ 'Counter_Params_img_size_px'|translate }}
+                    <label for="img_size">{{ 'Counter_Params_img_size'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_img_size_desc'|translate }}</div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="img_path" value="plugins/Counter/assets/images/counter.png" id="img_path"
+                           class="paths" size="70"/>
+                    <span>&nbsp;</span>
+                    <label for="img_path">{{ 'Counter_Params_img_path'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_img_path_desc'|translate }}</div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="font_path" value="plugins/Counter/assets/fonts/OpenSans-Regular.ttf"
+                           id="font_path" class="paths" size="70"/>
+                    <span>&nbsp;</span>
+                    <label for="font_path">{{ 'Counter_Params_fontpath'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_fontpath_desc'|translate }}</div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <h3 class="col s12">{{ 'Counter_Params_cache'|translate }}</h3>
+
+                <div class="col s12 m6">
+                    <p>
+                        <input type="radio" name="cache" id="cache_y" value="1" checked="checked" />
+                        <label class="radio" for="cache_y">{{ 'General_Yes'|translate }}</label>
+                    </p>
+
+                    <p>
+                        <input type="radio" name="cache" id="cache_n" value="0" />
+                        <label class="radio" for="cache_n">{{ 'General_No'|translate }}</label>
+                    </p>
+                    <span id="cache"></span>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_cache_off'|translate }}</div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="cache_time" value="900" id="cache_time" size="7" maxlength="7" required/>
+                    <span class="form-description"> {{ 'Counter_Seconds'|translate }}</span>
+                    <label for="cache_time">{{ 'Counter_Params_cache_time'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_cache_time_desc'|translate }}</div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="token" value="{{ data.params.token }}" id="token" size="70" maxlength="64" required/>
+                    <label for="token">{{ 'Counter_Params_token_auth'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_token_auth_desc'|translate }}</div>
+                </div>
+            </div>
+
+            <p class="separator_parent"><strong>{{ 'Counter_Params_live_sep'|translate }}</strong></p>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="last_minutes" value="30" id="last_minutes" size="4" maxlength="3"/>
+                    <span class="form-description"> {{ 'Counter_Minutes'|translate }}</span>
+                    <label for="last_minutes">{{ 'Counter_Params_live_period'|translate }}</label>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="check_interval" value="10000" id="check_interval" size="7" maxlength="6"/>
+                    <span class="form-description"> {{ 'Counter_Mseconds'|translate }}</span>
+                    <label for="check_interval">{{ 'Counter_Params_live_interval'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_live_interval_desc'|translate }}</div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <h3 class="col s12">{{ 'Counter_Params_live_static'|translate }}</h3>
+
+                <div class="col s12 m6">
+                    <p>
+                        <input type="radio" name="static" id="static_y" value="1" checked="checked" />
+                        <label class="radio" for="static_y">{{ 'General_Yes'|translate }}</label>
+                    </p>
+
+                    <p>
+                        <input type="radio" name="static" id="static_n" value="0" />
+                        <label class="radio" for="static_n">{{ 'General_No'|translate }}</label>
+                    </p>
+                    <span id="cache"></span>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_live_static_desc'|translate }}</div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="livestat_elem_id" id="livestat_elem_id" size="70"/>
+                    <label for="livestat_elem_id">{{ 'Counter_Params_live_elemid'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_live_elemid_desc'|translate|raw }}</div>
+                </div>
+            </div>
+
+            <p class="separator_parent"><strong>{{ 'Counter_Params_tpl_by_countries_sep'|translate }}</strong></p>
+
+            <div class="form-group row">
+                <h6 class="col s12"><label for="tpl_by_countries">{{ 'Counter_Params_tpl_by_countries'|translate }}</label></h6>
+
+                <div class="input-field col s12 m6">
+                    <div class="ng-scope">
+                        <textarea name="tpl_by_countries" id="tpl_by_countries" cols="50" rows="5" spellcheck="false" class="materialize-textarea ng-pristine ng-valid ng-touched"></textarea>
+                    </div>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_tpl_by_countries_desc'|translate|raw }}</div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="input-field col s12 m6">
+                    <input type="text" name="tpl_by_countries_elem_id" id="tpl_by_countries_elem_id" size="70"/>
+                    <label for="tpl_by_countries_elem_id">{{ 'Counter_Params_live_elemid'|translate }}</label>
+                </div>
+                <div class="col s12 m6">
+                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_live_elemid_desc'|translate|raw }}</div>
+                </div>
+            </div>
+
+            <input type="hidden" name="module" value="Counter"/>
+            <input type="hidden" name="action" value="" id="action"/>
+
+            <input type="button" value="{{ 'General_Save'|translate }}" class="btn save"/>
+            <input type="button" value="{{ 'Counter_Apply'|translate }}" class="btn apply"/>
+            <input type="button" value="{{ 'General_Close'|translate }}" class="btn go_back"/>
+        </form>
+    </div>
+</div>
+    {% include '@Counter/default_footer.twig' %}
 {% endblock %}
