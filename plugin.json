@@ -1,6 +1,6 @@
 {
   "name": "Counter",
-  "version": "2.0.13",
+  "version": "2.0.14",
   "description": "Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text via ajax requests.",
   "theme": false,
   "require": {
