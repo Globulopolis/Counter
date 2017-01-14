@@ -1,10 +1,10 @@
 <?php
 /**
- * @package        Piwik.Counter
- * @copyright    Copyright (C) 2010 Libra.ms. All rights reserved.
- * @license        GNU General Public License version 3 or later
- * @url            http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
- * @url            http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
+ * @package    Piwik.Counter
+ * @copyright  Copyright (C) 2010 Libra.ms. All rights reserved.
+ * @license    GNU General Public License version 3 or later
+ * @url        http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
+ * @url        http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
  */
 
 namespace Piwik\Plugins\Counter;
@@ -16,11 +16,18 @@ use Piwik\Db;
 use Piwik\Piwik;
 use Piwik\Plugins\SitesManager\API as SitesManager;
 
+/**
+ * Plugin model class.
+ */
 class Model
 {
     private static $rawPrefix = 'counter_sites';
+
     private $table;
 
+    /**
+     * Constructor.
+     */
     public function __construct()
     {
         $this->table = Common::prefixTable(self::$rawPrefix);
@@ -29,9 +36,9 @@ class Model
     /**
      * Get the vars from edit form and filter them.
      *
-     * @param   boolean $encode Encode 'params' array into JSON string.
+     * @param   boolean  $encode  Encode 'params' array into JSON string.
      *
-     * @return    array
+     * @return  array
      */
     public function getForm($encode = false)
     {
@@ -44,6 +51,7 @@ class Model
         }
 
         $data = array(
+            'id'        => Common::getRequestVar('id', 0, 'int'),
             'idsite'    => Common::getRequestVar('siteid', 0, 'int'),
             'title'     => Common::getRequestVar('title', 'Default site', 'string'),
             'params'    => array(
@@ -94,7 +102,7 @@ class Model
     /**
      * Get the list of counters
      *
-     * @param   boolean $return_id Return only primary keys of counters.
+     * @param   boolean  $return_id  Return only primary keys of counters.
      *
      * @return  array
      */
@@ -127,6 +135,15 @@ class Model
         return $result;
     }
 
+    /**
+     * Get data for single record.
+     *
+     * @param   integer  $id  Counter ID.
+     *
+     * @return  array
+     *
+     * @throws  Exception
+     */
     public function getItem($id)
     {
         $result = array();
@@ -176,6 +193,11 @@ class Model
         return $result;
     }
 
+    /**
+     * Get the list of all sites.
+     *
+     * @return  array
+     */
     public function getSitesList()
     {
         $result = Db::fetchAll("SELECT idsite, name"
@@ -203,6 +225,16 @@ class Model
         return false;
     }
 
+    /**
+     * Method to change the published state of one or more records.
+     *
+     * @param   array    $ids    IDs
+     * @param   boolean  $state  Action state
+     *
+     * @return  boolean  True on success.
+     *
+     * @since   3.0
+     */
     public function publish($ids, $state)
     {
         $ids = array_intersect($ids, $this->getItems(true));
@@ -218,29 +250,46 @@ class Model
         return true;
     }
 
-    public function save($id, $data)
+    /**
+     * Method to save the form data.
+     *
+     * @param   array  $data  The form data.
+     *
+     * @return  boolean  True on success.
+     *
+     * @since   3.0
+     */
+    public function save($data)
     {
-        $exists = $this->counterExists($data['idsite']);
-
-        if ($exists) {
+        if (empty($data['idsite'])) {
             return false;
         }
 
-        /*if (empty($id)) {
-            $bind = array('', $data['idsite'], $data['title'], $data['params'], $data['visits'], $data['views'], $data['published']);
+        if (empty($data['id'])) {
+            $exists = $this->counterExists($data['idsite']);
+
+            if ($exists) {
+                return false;
+            }
+
+            $bind = array(null, $data['idsite'], $data['title'], $data['params'], $data['visits'], $data['views'], $data['published']);
             $query = sprintf('INSERT INTO %s (id, idsite, title, params, visits, views, published) VALUES (?,?,?,?,?,?,?)', $this->table);
         } else {
-            $bind = array($data['idsite'], $data['title'], $data['params'], $data['visits'], $data['views'], $data['published'], $id[0]);
+            $bind = array($data['idsite'], $data['title'], $data['params'], $data['visits'], $data['views'], $data['published'], $data['id']);
             $query = sprintf('UPDATE %s SET idsite = ?, title = ?, params = ?, visits = ?, views = ?, published = ? WHERE id = ?', $this->table);
         }
 
         try {
             Db::query($query, $bind);
 
-            return empty($id[0]) ? Db::get()->lastInsertId() : $id[0];
+            if (empty($data['id'])) {
+                return Db::get()->lastInsertId();
+            } else {
+                return $data['id'];
+            }
         } catch (Exception $e) {
             return false;
-        }*/
+        }
     }
 
     public function remove($ids)

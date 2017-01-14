@@ -9,6 +9,16 @@ Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text v
 See http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
 
 ## Changelog
+2.1.0
+* New plugin version for Piwik 3.
+
+2.0.15
+* Increase version number(wrong tagging).
+
+2.0.14
+* Fix code style.
+* Code clean up.
+
 2.0.13
 * Remove initial value checks for visits.
 * Fix extra space in counter code.

@@ -86,7 +86,7 @@
                         });
                     });
                 }
-            }).trigger('change');
+            });
             $('#start_date_period').change(function () {
                 if ($('option', this).filter(':selected').val() != 'none') {
                     $('#start_date').val('');
@@ -550,6 +550,7 @@
 
             <input type="hidden" name="module" value="Counter"/>
             <input type="hidden" name="action" value="" id="action"/>
+            <input type="hidden" name="id" value=""/>
 
             <input type="button" value="{{ 'General_Save'|translate }}" class="btn save"/>
             <input type="button" value="{{ 'Counter_Apply'|translate }}" class="btn apply"/>

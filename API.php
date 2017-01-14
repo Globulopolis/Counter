@@ -1,11 +1,12 @@
 <?php
 /**
- * @package        Piwik.Counter.API
- * @copyright    Copyright (C) 2010 Libra.ms. All rights reserved.
- * @license        GNU General Public License version 3 or later
- * @url            http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
- * @url            http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
+ * @package    Piwik.Counter
+ * @copyright  Copyright (C) 2010 Libra.ms. All rights reserved.
+ * @license    GNU General Public License version 3 or later
+ * @url        http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
+ * @url        http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
  */
+
 namespace Piwik\Plugins\Counter;
 
 use Exception;
@@ -75,8 +76,8 @@ class API extends \Piwik\Plugin\API
     /**
      * Method to change the published state of one or more records.
      *
-     * @param   array $ids A list of the primary keys to change.
-     * @param   integer $state The value of the published state.
+     * @param   array    $ids    A list of the primary keys to change.
+     * @param   integer  $state  The value of the published state.
      *
      * @return  boolean  True on success.
      */
@@ -96,9 +97,9 @@ class API extends \Piwik\Plugin\API
     /**
      * Remove counter(s) from DB and clear the image cache.
      *
-     * @param    array $ids A list of the primary keys to remove.
+     * @param   array  $ids  A list of the primary keys to remove.
      *
-     * @return   boolean  True on success.
+     * @return  boolean  True on success.
      */
     public function remove($ids)
     {
@@ -157,20 +158,15 @@ class API extends \Piwik\Plugin\API
     /**
      * Method to save the data into DB
      *
-     * @return   mixed   Return lastInsertID or item ID on update, false on error.
+     * @return   mixed  Return lastInsertID or item ID on update, false on error.
      */
     public function save()
     {
-        $id = Common::getRequestVar('id', array(), 'array');
-        $site_id = Common::getRequestVar('siteid', 0, 'int');
-
-        if (empty($site_id)) {
-            return false;
-        }
-
         $this->checkAccess();
 
-        $result = $this->getModel()->save($id, $this->getModel()->getForm(true));
+        $model = $this->getModel();
+        $data = $model->getForm(true);
+        $result = $model->save($data);
 
         return $result;
     }
@@ -178,10 +174,10 @@ class API extends \Piwik\Plugin\API
     /**
      * Enqueue message in the session and display it.
      *
-     * @param    string $message The text to display
-     * @param    string $style Style of the message. See CONTEXT_* in core/Notification.php fot valid message styles.
-     * @param    string $type Message type. See TYPE_* in core/Notification.php fot valid message types.
-     * @param    integer $priority Priority. See PRIORITY_* in core/Notification.php fot valid message priorities.
+     * @param    string   $message   The text to display
+     * @param    string   $style     Style of the message. See CONTEXT_* in core/Notification.php fot valid message styles.
+     * @param    string   $type      Message type. See TYPE_* in core/Notification.php fot valid message types.
+     * @param    integer  $priority  Priority. See PRIORITY_* in core/Notification.php fot valid message priorities.
      *
      * @return    void
      */
@@ -234,11 +230,12 @@ class API extends \Piwik\Plugin\API
     }
 
     /**
-     * Check the user access rights
+     * Check the user access rights. Request it inly via controller not an API, because user session won't start.
      *
-     * @param   boolean $is_index True if counter data requested from frontpage
+     * @param   boolean  $is_index  True if counter data requested from frontpage
      *
-     * @return    boolean
+     * @return  boolean
+     *
      * @throws  Exception
      */
     public function checkAccess($is_index = false)
@@ -292,7 +289,7 @@ class API extends \Piwik\Plugin\API
     /**
      * Clear cache for custom counter
      *
-     * @param    array $params An array with the counter data.
+     * @param    array  $params  An array with the counter data.
      *
      * @return   mixed
      */
@@ -496,7 +493,7 @@ class API extends \Piwik\Plugin\API
                     'automatic_serialization' => false
                 ),
                 array(
-                    'cache_dir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR)
+                    'cache_dir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT . '/tmp/cache/')
                 )
             );
 
@@ -716,7 +713,7 @@ class API extends \Piwik\Plugin\API
     /**
      * Clear cache for custom counter
      *
-     * @param    array $ids A list of the primary keys.
+     * @param    array  $ids  A list of the primary keys.
      *
      * @return   boolean  True on success.
      */
@@ -734,7 +731,7 @@ class API extends \Piwik\Plugin\API
         $cache = Zend_Cache::factory('Output', 'File',
             array(),
             array(
-                'cache_dir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR)
+                'cache_dir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT . '/tmp/cache/')
             )
         );
 
@@ -754,7 +751,7 @@ class API extends \Piwik\Plugin\API
     /**
      * Get plugin information
      *
-     * @return    array
+     * @return   array
      */
     public function getPluginInfo()
     {
@@ -766,9 +763,9 @@ class API extends \Piwik\Plugin\API
     /**
      * Method to get proper MIME type
      *
-     * @param   string $path Absolute path to file
+     * @param   string  $path  Absolute path to file
      *
-     * @return    string
+     * @return  string
      */
     private function getMime($path)
     {

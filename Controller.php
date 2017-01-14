@@ -1,11 +1,12 @@
 <?php
 /**
- * @package        Piwik.Counter.Controller
- * @copyright    Copyright (C) 2010 Libra.ms. All rights reserved.
- * @license        GNU General Public License version 3 or later
- * @url            http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
- * @url            http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
+ * @package    Piwik.Counter
+ * @copyright  Copyright (C) 2010 Libra.ms. All rights reserved.
+ * @license    GNU General Public License version 3 or later
+ * @url        http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
+ * @url        http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
  */
+
 namespace Piwik\Plugins\Counter;
 
 use Piwik\Access;
@@ -135,6 +136,8 @@ class Controller extends Plugin\Controller
         if (strtolower(Common::getRequestVar('format', '', 'string')) === 'json') {
             Json::sendHeaderJSON();
             echo json_encode(array('success' => $result));
+
+            return;
         }
 
         if (!$result) {
@@ -205,7 +208,7 @@ class Controller extends Plugin\Controller
         }
 
         if ($task == 'apply') {
-            $this->redirectToIndex('Counter', 'edit', null, null, null, array('id[]' => $result));
+            $this->redirectToIndex('Counter', 'edit', null, null, null, array('id' => $result));
         } else {
             $this->redirectToIndex('Counter', 'index');
         }

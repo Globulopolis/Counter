@@ -1,10 +1,10 @@
 <?php
 /**
- * @package        Piwik.Counter
- * @copyright    Copyright (C) 2010 Libra.ms. All rights reserved.
- * @license        GNU General Public License version 3 or later
- * @url            http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
- * @url            http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
+ * @package    Piwik.Counter
+ * @copyright  Copyright (C) 2010 Libra.ms. All rights reserved.
+ * @license    GNU General Public License version 3 or later
+ * @url        http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
+ * @url        http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
  */
 
 namespace Piwik\Plugins\Counter;
@@ -14,9 +14,15 @@ use Piwik\Common;
 use Piwik\Db;
 use Piwik\Plugin;
 
+/**
+ * Plugin class.
+ */
 class Counter extends Plugin
 {
-    public function getListHooksRegistered()
+    /**
+     * Associate callbacks with events.
+     */
+    public function registerEvents()
     {
         return array(
             'AssetManager.getStylesheetFiles' => 'getStylesheetFiles',
@@ -34,12 +40,17 @@ class Counter extends Plugin
         $jsFiles[] = 'plugins/Counter/assets/js/ui.aurora.min.js';
     }
 
-    // This function needed if table for Counter plugin doesn't exists. E.g. we install plugin via copying into plugins folder.
+    /**
+     * Executed every time the plugin is enabled.
+     */
     public function activate()
     {
         $this->install();
     }
 
+    /**
+     * Installs the plugin.
+     */
     public function install()
     {
         try {
@@ -64,6 +75,9 @@ class Counter extends Plugin
         }
     }
 
+    /**
+     * Uninstalls the plugins.
+     */
     public function uninstall()
     {
         Db::dropTables(Common::prefixTable('counter_sites'));
