@@ -1,19 +1,17 @@
 <?php
 /**
- * @package        Piwik.Counter.Controller
- * @copyright    Copyright (C) 2010 Libra.ms. All rights reserved.
- * @license        GNU General Public License version 3 or later
- * @url            http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
- * @url            http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
+ * @package    Piwik.Counter
+ * @copyright  Copyright (C) 2010 Libra.ms. All rights reserved.
+ * @license    GNU General Public License version 3 or later
+ * @url        http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
+ * @url        http://киноархив.com/ru/разное/piwik/9-piwik-графический-счетчик.html
  */
+
 namespace Piwik\Plugins\Counter;
 
 use Piwik\Access;
 use Piwik\Common;
 use Piwik\DataTable\Renderer\Json;
-use Piwik\Menu\MenuAdmin;
-use Piwik\Menu\MenuTop;
-use Piwik\Menu\MenuUser;
 use Piwik\Plugin;
 use Piwik\Plugins\SitesManager\API as APISitesManager;
 use Piwik\Translation\Translator;
@@ -21,235 +19,213 @@ use Piwik\View;
 
 class Controller extends Plugin\Controller
 {
-	/**
-	 * Template name.
-	 *
-	 * @var    string
-	 */
-	private $template = 'default';
+    /**
+     * Template name.
+     *
+     * @var    string
+     */
+    private $template = 'default';
 
-	/**
-	 * Translator class.
-	 *
-	 * @var   Translator
-	 */
-	private $translator;
+    /**
+     * Template name.
+     *
+     * @var    string
+     */
+    protected $api;
 
-	public function __construct(Translator $translator)
-	{
-		$this->api = API::getInstance();
-		$this->translator = $translator;
+    /**
+     * Translator class.
+     *
+     * @var   Translator
+     */
+    private $translator;
 
-		parent::__construct();
-	}
+    public function __construct(Translator $translator)
+    {
+        $this->api = API::getInstance();
+        $this->translator = $translator;
 
-	public function index()
-	{
-		$view = new View('@Counter/' . $this->template . '.twig');
-		$this->setBasicVariablesView($view);
-		$this->setGeneralVariablesView($view);
-		$view->topMenu = MenuTop::getInstance()->getMenu();
-		$view->userMenu = MenuUser::getInstance()->getMenu();
-		$view->adminMenu = MenuAdmin::getInstance()->getMenu();
-		$view->counters = $this->api->getItems();
-		$view->plugin_info = $this->api->getPluginInfo();
+        parent::__construct();
+    }
 
-		$viewableIdSites = APISitesManager::getInstance()->getSitesIdWithAtLeastViewAccess();
-		$defaultIdSite = reset($viewableIdSites);
-		$view->idSite = Common::getRequestVar('idSite', $defaultIdSite, 'int');
+    public function index()
+    {
+        $view = new View('@Counter/' . $this->template . '.twig');
+        $this->setBasicVariablesView($view);
+        $this->setGeneralVariablesView($view);
+        $view->counters = $this->api->getItems();
+        $view->plugin_info = $this->api->getPluginInfo();
 
-		$view->period = Common::getRequestVar('period', 'day', 'string');
-		$view->date = Common::getRequestVar('date', 'yesterday', 'string');
-		$view->server_vars = array(
-			'protocol' => ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || $_SERVER['SERVER_PORT'] == 443) ? 'https://' : 'http://',
-			'server_name' => Common::sanitizeInputValue($_SERVER['SERVER_NAME']),
-			'php_self' => Common::sanitizeInputValue($_SERVER['PHP_SELF'])
-		);
+        $viewableIdSites = APISitesManager::getInstance()->getSitesIdWithAtLeastViewAccess();
+        $defaultIdSite = reset($viewableIdSites);
+        $view->idSite = Common::getRequestVar('idSite', $defaultIdSite, 'int');
 
-		return $view->render();
-	}
+        $view->period = Common::getRequestVar('period', 'day', 'string');
+        $view->date = Common::getRequestVar('date', 'yesterday', 'string');
+        $view->server_vars = array(
+            'protocol' => ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || $_SERVER['SERVER_PORT'] == 443) ? 'https://' : 'http://',
+            'server_name' => Common::sanitizeInputValue($_SERVER['SERVER_NAME']),
+            'php_self' => Common::sanitizeInputValue($_SERVER['PHP_SELF'])
+        );
 
-	public function unpublish()
-	{
-		$this->publish(0);
-	}
+        return $view->render();
+    }
 
-	public function publish($state = 1)
-	{
-		$ids = Common::getRequestVar('id', array(), 'array');
-		$result = $this->api->publish($ids, $state);
+    public function unpublish()
+    {
+        $this->publish(0);
+    }
 
-		if (!$result) {
-			$this->api->enqueueMessage($this->translator->translate('Counter_Error_has_occurred'), 'error');
-		} else {
-			if ($state == 1) {
-				if (count($ids) > 1) {
-					$message = $this->translator->translate('Counter_Published_success_1');
-				} else {
-					$message = $this->translator->translate('Counter_Published_success_0');
-				}
-			} else {
-				if (count($ids) > 1) {
-					$message = $this->translator->translate('Counter_Unpublished_success_1');
-				} else {
-					$message = $this->translator->translate('Counter_Unpublished_success_0');
-				}
-			}
+    public function publish($state = 1)
+    {
+        $ids = Common::getRequestVar('id', array(), 'array');
+        $result = $this->api->publish($ids, $state);
 
-			$this->api->enqueueMessage($message, 'success', 'toast');
-		}
+        if (!$result) {
+            $this->api->enqueueMessage($this->translator->translate('Counter_Error_has_occurred'), 'error');
+        } else {
+            if ($state == 1) {
+                if (count($ids) > 1) {
+                    $message = $this->translator->translate('Counter_Published_success_1');
+                } else {
+                    $message = $this->translator->translate('Counter_Published_success_0');
+                }
+            } else {
+                if (count($ids) > 1) {
+                    $message = $this->translator->translate('Counter_Unpublished_success_1');
+                } else {
+                    $message = $this->translator->translate('Counter_Unpublished_success_0');
+                }
+            }
 
-		$this->redirectToIndex('Counter', 'index');
-	}
+            $this->api->enqueueMessage($message, 'success', 'toast');
+        }
 
-	public function remove()
-	{
-		$ids = Common::getRequestVar('id', array(), 'array');
-		$result = $this->api->remove($ids);
+        $this->redirectToIndex('Counter', 'index');
+    }
 
-		if (strtolower(Common::getRequestVar('format', '', 'string')) === 'json') {
-			Json::sendHeaderJSON();
-			echo json_encode(array('success' => $result));
-		}
+    public function remove()
+    {
+        $ids = Common::getRequestVar('id', array(), 'array');
+        $result = $this->api->remove($ids);
 
-		if (!$result) {
-			$this->api->enqueueMessage($this->translator->translate('Counter_Remove_error'), 'error');
-		} else {
-			if (count($ids) > 1) {
-				$message = $this->translator->translate('Counter_Removed_1');
-			} else {
-				$message = $this->translator->translate('Counter_Removed_0');
-			}
+        if (strtolower(Common::getRequestVar('format', '', 'string')) === 'json') {
+            Json::sendHeaderJSON();
+            echo json_encode(array('success' => $result));
+        }
 
-			$this->api->enqueueMessage($message, 'success', 'toast');
-		}
+        if (!$result) {
+            $this->api->enqueueMessage($this->translator->translate('Counter_Remove_error'), 'error');
+        } else {
+            if (count($ids) > 1) {
+                $message = $this->translator->translate('Counter_Removed_1');
+            } else {
+                $message = $this->translator->translate('Counter_Removed_0');
+            }
 
-		$this->redirectToIndex('Counter', 'index');
-	}
+            $this->api->enqueueMessage($message, 'success', 'toast');
+        }
 
-	public function clearCache()
-	{
-		$result = $this->api->clearCache(Common::getRequestVar('id', array(), 'array'));
+        $this->redirectToIndex('Counter', 'index');
+    }
 
-		if (strtolower(Common::getRequestVar('format', '', 'string')) === 'json') {
-			Json::sendHeaderJSON();
-			echo json_encode(array('success' => $result));
-		}
+    public function clearCache()
+    {
+        $result = $this->api->clearCache(Common::getRequestVar('id', array(), 'array'));
 
-		if (!$result) {
-			$this->api->enqueueMessage($this->translator->translate('Counter_Cache_clear_error'), 'error');
-		} else {
-			$this->api->enqueueMessage($this->translator->translate('Counter_Cache_cleared'), 'success', 'toast');
-		}
+        if (strtolower(Common::getRequestVar('format', '', 'string')) === 'json') {
+            Json::sendHeaderJSON();
+            echo json_encode(array('success' => $result));
 
-		$this->redirectToIndex('Counter', 'index');
-	}
+            return;
+        }
 
-	public function counterExists()
-	{
-		Json::sendHeaderJSON();
-		echo $this->api->counterExists(Common::getRequestVar('idsite', 0, 'int'));
-	}
+        if (!$result) {
+            $this->api->enqueueMessage($this->translator->translate('Counter_Cache_clear_error'), 'error');
+        } else {
+            $this->api->enqueueMessage($this->translator->translate('Counter_Cache_cleared'), 'success', 'toast');
+        }
 
-	public function add()
-	{
-		$this->api->checkAccess();
+        $this->redirectToIndex('Counter', 'index');
+    }
 
-		$view = new View('@Counter/' . $this->template . '_add.twig');
-		$this->setBasicVariablesView($view);
-		$this->setGeneralVariablesView($view);
-		$view->topMenu = MenuTop::getInstance()->getMenu();
-		$view->userMenu = MenuUser::getInstance()->getMenu();
-		$view->adminMenu = MenuAdmin::getInstance()->getMenu();
-		$view->token = Access::getInstance()->getTokenAuth();
-		$view->plugin_info = $this->api->getPluginInfo();
+    public function create()
+    {
+        $this->api->checkAccess();
 
-		$viewableIdSites = APISitesManager::getInstance()->getSitesIdWithAtLeastViewAccess();
-		$defaultIdSite = reset($viewableIdSites);
-		$view->idSite = Common::getRequestVar('idSite', $defaultIdSite, 'int');
+        $view = new View('@Counter/' . $this->template . '_add.twig');
+        $this->setBasicVariablesView($view);
+        $this->setGeneralVariablesView($view);
+        $view->token = Access::getInstance()->getTokenAuth();
+        $view->plugin_info = $this->api->getPluginInfo();
 
-		$view->period = Common::getRequestVar('period', 'day', 'string');
-		$view->date = Common::getRequestVar('date', 'yesterday', 'string');
-		$view->list_sites = $this->api->getSitesList();
+        $viewableIdSites = APISitesManager::getInstance()->getSitesIdWithAtLeastViewAccess();
+        $defaultIdSite = reset($viewableIdSites);
+        $view->idSite = Common::getRequestVar('idSite', $defaultIdSite, 'int');
 
-		return $view->render();
-	}
+        $view->period = Common::getRequestVar('period', 'day', 'string');
+        $view->date = Common::getRequestVar('date', 'yesterday', 'string');
+        $view->list_sites = $this->api->getSitesList();
+        $view->data = $this->api->getItem();
 
-	public function edit()
-	{
-		$this->api->checkAccess();
+        return $view->render();
+    }
 
-		$view = new View('@Counter/' . $this->template . '_edit.twig');
-		$this->setBasicVariablesView($view);
-		$this->setGeneralVariablesView($view);
-		$view->topMenu = MenuTop::getInstance()->getMenu();
-		$view->userMenu = MenuUser::getInstance()->getMenu();
-		$view->adminMenu = MenuAdmin::getInstance()->getMenu();
-		$view->plugin_info = $this->api->getPluginInfo();
+    public function edit()
+    {
+        $this->api->checkAccess();
 
-		$viewableIdSites = APISitesManager::getInstance()->getSitesIdWithAtLeastViewAccess();
-		$defaultIdSite = reset($viewableIdSites);
-		$view->idSite = Common::getRequestVar('idSite', $defaultIdSite, 'int');
+        $view = new View('@Counter/' . $this->template . '_edit.twig');
+        $this->setBasicVariablesView($view);
+        $this->setGeneralVariablesView($view);
+        $view->plugin_info = $this->api->getPluginInfo();
 
-		$view->period = Common::getRequestVar('period', 'day', 'string');
-		$view->date = Common::getRequestVar('date', 'yesterday', 'string');
-		$view->list_sites = $this->api->getSitesList();
-		$view->data = $this->api->getItem();
+        $viewableIdSites = APISitesManager::getInstance()->getSitesIdWithAtLeastViewAccess();
+        $defaultIdSite = reset($viewableIdSites);
+        $view->idSite = Common::getRequestVar('idSite', $defaultIdSite, 'int');
 
-		return $view->render();
-	}
+        $view->period = Common::getRequestVar('period', 'day', 'string');
+        $view->date = Common::getRequestVar('date', 'yesterday', 'string');
+        $view->list_sites = $this->api->getSitesList();
+        $view->data = $this->api->getItem();
 
-	public function save()
-	{
-		$this->apply('save');
-	}
+        return $view->render();
+    }
 
-	public function apply($task = 'apply')
-	{
-		$result = $this->api->save();
+    public function save()
+    {
+        $this->apply('save');
+    }
 
-		if (!$result) {
-			$this->api->enqueueMessage($this->translator->translate('Counter_Save_error'), 'error');
-		} else {
-			$this->api->enqueueMessage($this->translator->translate('Counter_Saved'), 'success', 'toast');
-		}
+    public function apply($task = 'apply')
+    {
+        $result = $this->api->save();
 
-		if ($task == 'apply') {
-			$this->redirectToIndex('Counter', 'edit', null, null, null, array('id[]' => $result));
-		} else {
-			$this->redirectToIndex('Counter', 'index');
-		}
-	}
+        if (!$result) {
+            $this->api->enqueueMessage($this->translator->translate('Counter_Save_error'), 'error');
+        } else {
+            $this->api->enqueueMessage($this->translator->translate('Counter_Saved'), 'success', 'toast');
+        }
 
-	/**
-	 * Method to check if file exists
-	 *
-	 * @return  string
-	 */
-	public function checkpath()
-	{
-		$this->api->checkAccess();
+        if ($task == 'apply') {
+            $this->redirectToIndex('Counter', 'edit', null, null, null, array('id' => $result));
+        } else {
+            $this->redirectToIndex('Counter', 'index');
+        }
+    }
 
-		clearstatcache();
-		$path = trim(Common::getRequestVar('path', '', 'string'));
-		$success = file_exists($path) ? 1 : 0;
+    public function preview()
+    {
+        $this->api->previewImage();
+    }
 
-		Json::sendHeaderJSON();
-		echo json_encode(array('success' => $success));
-	}
+    public function show()
+    {
+        $this->api->showImage();
+    }
 
-	public function preview()
-	{
-		$this->api->previewImage();
-	}
-
-	public function show()
-	{
-		$this->api->showImage();
-	}
-
-	public function live()
-	{
-		$this->api->getLiveVisitorsCount();
-	}
+    public function live()
+    {
+        $this->api->getLiveVisitorsCount();
+    }
 }
