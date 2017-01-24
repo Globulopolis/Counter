@@ -2,80 +2,87 @@
 {% block content %}
 
     <script type="text/javascript">
-        function submitform(task) {
-            var form = document.getElementById('countersForm');
-
-            if (jQuery('.item-checkbox').filter(':checked').length == 0) {
-                jQuery('.addRowCounter').aurora({
-                    text: '{{ 'Counter_List_make_selection'|translate }}',
-                    leave_only_first: true,
-                    container: 'ui-state-error',
-                    icon: 'ui-icon-alert',
-                    placement: 'after',
-                    button: 'close',
-                    button_title: '[{{ 'General_Close'|translate }}]'
-                });
-
-                return false;
-            } else {
-                if (typeof(task) !== 'undefined' && task !== "") {
-                    form.action.value = task;
-                }
-                if (typeof form.onsubmit == 'function') {
-                    form.onsubmit();
-                }
-                if (typeof form.fireEvent == "function") {
-                    form.fireEvent('onsubmit');
-                }
-                if (typeof jQuery == "function") {
-                    jQuery(form).submit();
-                }
-                form.submit();
-            }
-        }
-
         jQuery(document).ready(function ($) {
             $('#checkAll').change(function () {
                 $('input:checkbox').prop('checked', $(this).prop('checked'));
             });
 
-            $('.delete-counter').click(function (e) {
+            $('.cmd-state').click(function (e) {
                 e.preventDefault();
 
-                var _this = $(this),
-                    dlg = $('#dialog_remove');
+                var $this = $(this),
+                    checkbox = $this.closest('tr').find('input:checkbox');
 
-                dlg.dialog({
-                    buttons: {
-                        '{{ 'General_Delete'|translate }}': function () {
-                            $.get(_this.attr('href'), function (response) {
-                                if (response.success == 1) {
-                                    _this.closest('tr').remove();
-                                    dlg.dialog('close');
-                                } else {
-                                    $('p', dlg).remove();
-                                    dlg.aurora({
-                                        text: '{{ 'Counter_Remove_error'|translate }}',
-                                        leave_only_first: true,
-                                        container: 'ui-state-error',
-                                        icon: 'ui-icon-alert'
-                                    });
-                                }
-                            });
-                        },
-                        '{{ 'General_Cancel'|translate }}': function () {
-                            dlg.dialog('close');
-                        }
-                    },
-                    draggable: false,
-                    resizable: false,
-                    modal: true,
-                    height: 150,
-                    width: 420
-                });
+                // Uncheck all checkboxes
+                $('input:checkbox').prop('checked', '');
+
+                // Check only selected
+                checkbox.prop('checked', 'checked');
+
+                if ($this.hasClass('publish')) {
+                    $('input[name="action"]').val('publish');
+                    $('#countersForm').submit();
+                } else if ($this.hasClass('unpublish')) {
+                    $('input[name="action"]').val('unpublish');
+                    $('#countersForm').submit();
+                }
             });
 
             $('.hasTooltip').tooltip({track: true, show: false, hide: false});
+
+            $('.addRowCounter .cmd-button').click(function (e) {
+                e.preventDefault();
+
+                var $this = $(this),
+                    task  = $this.data('task'),
+                    dlg   = $('#dialog_remove');
+
+                if (task == 'create') {
+                    document.location.href = 'index.php?module=Counter&action=create&idSite={{ idSite }}&period={{ period }}&date={{ date }}';
+                } else {
+                    if ($('.item-checkbox').filter(':checked').length == 0) {
+                        $('.addRowCounter').aurora({
+                            text: '{{ 'Counter_List_make_selection'|translate }}',
+                            leave_only_first: true,
+                            container: 'ui-state-error',
+                            icon: 'ui-icon-alert',
+                            placement: 'after',
+                            button: 'close',
+                            button_title: '[{{ 'General_Close'|translate }}]'
+                        });
+
+                        return false;
+                    }
+
+                    if (task == 'publish') {
+                        $('input[name="action"]').val('publish');
+                        $('#countersForm').submit();
+                    } else if (task == 'unpublish') {
+                        $('input[name="action"]').val('unpublish');
+                        $('#countersForm').submit();
+                    } else if (task == 'remove') {
+                        dlg.dialog({
+                            buttons: {
+                                '{{ 'General_Delete'|translate }}': function () {
+                                    $('input[name="action"]').val('remove');
+                                    $('#countersForm').submit();
+                                },
+                                '{{ 'General_Cancel'|translate }}': function () {
+                                    dlg.dialog('close');
+                                }
+                            },
+                            draggable: false,
+                            resizable: false,
+                            modal: true,
+                            height: 150,
+                            width: 420
+                        });
+                    } else if (task == 'clearcache') {
+                        $('input[name="action"]').val('clearCache');
+                        $('#countersForm').submit();
+                    }
+                }
+            });
         });
     </script>
 
@@ -84,16 +91,11 @@
             <h2>{{ 'Counter_Page_main'|translate }}</h2>
 
             <div class="addRowCounter">
-                <a href="index.php?module=Counter&action=create&idSite={{ idSite }}&period={{ period }}&date={{ date }}"
-                   class="btn btn-primary">{{ 'Counter_Create'|translate }}</a>
-                <button class="btn btn-primary"
-                        onclick="submitform('publish'); return false;">{{ 'Counter_Publish'|translate }}</button>
-                <button class="btn btn-primary"
-                        onclick="submitform('unpublish'); return false;">{{ 'Counter_Unpublish'|translate }}</button>
-                <button class="btn btn-primary"
-                        onclick="submitform('remove'); return false;">{{ 'Counter_Remove'|translate }}</button>
-                <button class="btn btn-primary"
-                        onclick="submitform('clearCache'); return false;">{{ 'Counter_Params_cache_clear'|translate }}</button>
+                <button class="btn btn-primary cmd-button" data-task="create"><span class="icon-plus"></span> {{ 'Counter_Create'|translate }}</button>
+                <button class="btn btn-primary cmd-button" data-task="publish"><span class="icon-ok"></span> {{ 'Counter_Publish'|translate }}</button>
+                <button class="btn btn-primary cmd-button" data-task="unpublish"><span class="icon-error"></span> {{ 'Counter_Unpublish'|translate }}</button>
+                <button class="btn btn-primary cmd-button" data-task="remove"><span class="icon-delete"></span> {{ 'Counter_Remove'|translate }}</button>
+                <button class="btn btn-primary cmd-button" data-task="clearcache">{{ 'Counter_Params_cache_clear'|translate }}</button>
             </div>
             <br/>
 
@@ -128,26 +130,21 @@
                                 </div>
                             </td>
                             <td>
-                                <strong><a href="index.php?module=Counter&action=edit&id={{ data.id }}&idSite={{ idSite }}&period={{ period }}&date={{ date }}"
-                                           title="{{ 'Counter_Edit_title'|translate }}">{% if data.title == '' %}{{ 'Counter_Sitename_nositename'|translate }}{% else %}{{ data.title }}{% endif %}</a></strong>
+                                <strong><a href="index.php?module=Counter&action=edit&id={{ data.id }}&idSite={{ idSite }}&period={{ period }}&date={{ date }}">{% if data.title == '' %}{{ 'Counter_Sitename_nositename'|translate }}{% else %}{{ data.title }}{% endif %}</a></strong>
 
                                 <div class="c-code">{{ 'Counter_Code'|translate }}&lt;img src="{{ server_vars.protocol }}{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=show&{% if data.params.start_date == '' and data.params.start_date_period == 'none' %}date=2010-01-01&{% endif %}id={{ data.id }}" border="0" /&gt;</div>
                                 <div class="c-code-live">{{ 'Counter_Code_live'|translate }}&lt;script type="text/javascript" src="{{ server_vars.protocol }}{{ server_vars.server_name }}{{ server_vars.php_self }}?module=Counter&action=live&id={{ data.id }}&type=js"&gt;&lt;/script&gt;</div>
                             </td>
                             <td valign="top" nowrap="nowrap">
                                 {% if data.published == 1 %}
-                                    <a href="index.php?module=Counter&action=unpublish&id[]={{ data.id }}"
-                                       title="{{ 'Counter_Unpublished'|translate }}" class="hasTooltip publish_y"></a>
+                                    <button type="button" class="btn btn-small cmd-state unpublish hasTooltip" title="{{ 'Counter_Unpublish'|translate }}"><span class="icon-ok"></span></button>
                                 {% else %}
-                                    <a href="index.php?module=Counter&action=publish&id[]={{ data.id }}"
-                                       title="{{ 'Counter_Published'|translate }}" class="hasTooltip publish_n"></a>
+                                    <button type="button" class="btn btn-small cmd-state publish hasTooltip" title="{{ 'Counter_Publish'|translate }}"><span class="icon-error"></span></button>
                                 {% endif %}
-                                <a href="index.php?module=Counter&action=remove&id[]={{ data.id }}&format=JSON"
-                                   title="{{ 'Counter_Delete_title'|translate }}" class="hasTooltip delete-counter"></a>
                             </td>
-                            <td valign="top"><a
-                                        href="index.php?module=SitesManager&action=index&idSite={{ idSite }}&period={{ period }}&date={{ date }}">{{ data.idsite }}</a>
-                                | {{ data.id }}</td>
+                            <td valign="top">
+                                <a href="index.php?module=SitesManager&action=index&idSite={{ idSite }}&period={{ period }}&date={{ date }}">{{ data.idsite }}</a> | {{ data.id }}
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -159,6 +156,8 @@
 
             <input type="hidden" name="module" value="Counter"/>
             <input type="hidden" name="action" value=""/>
+            <input type="hidden" name="nonce" value="{{ data.formNonce }}"/>
+            <input type="hidden" name="c_nonce" value="{{ data.cacheNonce }}"/>
         </form>
     </div>
 

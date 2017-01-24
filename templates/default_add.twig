@@ -8,11 +8,11 @@
         jQuery(document).ready(function ($) {
             $('.color-picker').each(function () {
                 $(this).minicolors({
-                    control: $(this).attr('data-control') || 'hue',
-                    defaultValue: $(this).attr('data-defaultValue') || '',
-                    letterCase: $(this).attr('data-letterCase') || 'lowercase',
-                    opacity: $(this).attr('data-opacity'),
-                    position: $(this).attr('data-position') || 'bottom left',
+                    control: $(this).data('control') || 'hue',
+                    defaultValue: $(this).data('defaultValue') || '',
+                    letterCase: $(this).data('letterCase') || 'lowercase',
+                    opacity: $(this).data('opacity'),
+                    position: $(this).data('position') || 'bottom left',
                     theme: 'default'
                 });
             });
@@ -123,7 +123,7 @@
                 <div class="input-field col s12 m6">
                     <select name="siteid" id="idsite" class="ng-isolate-scope ng-pristine ng-valid" required>
                         <option value="0">{{ 'Counter_Params_siteselect'|translate }}</option>
-                        {% for site in list_sites %}
+                        {% for site in data.item.sites %}
                             <option value="{{ site.idsite }}">{{ site.idsite }} - {{ site.name }}</option>
                         {% endfor %}
                     </select>
@@ -137,14 +137,9 @@
                 <span class="check-state"></span>
             </div>
 
-            <div class="form-group row">
-                <div class="input-field col s12 m6">
-                    <input type="text" name="title" id="title" size="70" maxlength="50"/>
-                    <label for="title">{{ 'Counter_Params_sitename'|translate }}</label>
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_sitename_desc'|translate }}</div>
-                </div>
+            <div piwik-field uicontrol="text" name="title" id="title" maxlength="50"
+                 title="{{ 'Counter_Params_sitename'|translate }}"
+                 inline-help="{{ 'Counter_Params_sitename_desc'|translate }}">
             </div>
 
             <div class="form-group row start_date">
@@ -169,97 +164,50 @@
 
             </div>
 
-            <div class="form-group row">
-                <div class="input-field col s12 m6">
-                    <input type="text" name="visits" value="0" id="visits" size="70" maxlength="11" />
-                    <label for="visits">{{ 'Counter_Params_visits_label'|translate }}</label>
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visits_desc'|translate }}</div>
-                </div>
+            <div piwik-field uicontrol="text" name="visits" id="visits" maxlength="11"
+                 value="0"
+                 title="{{ 'Counter_Params_visits_label'|translate }}"
+                 inline-help="{{ 'Counter_Params_visits_desc'|translate }}">
             </div>
 
-            <div class="form-group row">
-                <div class="input-field col s12 m6">
-                    <input type="text" name="views" value="0" id="views" size="70" maxlength="11" />
-                    <label for="views">{{ 'Counter_Params_views_label'|translate }}</label>
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_views_desc'|translate }}</div>
-                </div>
+            <div piwik-field uicontrol="text" name="views" id="views" maxlength="11"
+                 value="0"
+                 title="{{ 'Counter_Params_views_label'|translate }}"
+                 inline-help="{{ 'Counter_Params_views_desc'|translate }}">
             </div>
 
-            <div class="form-group row">
-                <h3 class="col s12">{{ 'Counter_Params_format_numbers_label'|translate }}</h3>
-
-                <div class="col s12 m6">
-                    <p>
-                        <input type="radio" name="format_numbers" id="format_numbers_y" value="1" />
-                        <label class="radio" for="format_numbers_y">{{ 'General_Yes'|translate }}</label>
-                    </p>
-
-                    <p>
-                        <input type="radio" name="format_numbers" id="format_numbers_n" value="0" checked="checked" />
-                        <label class="radio" for="format_numbers_n">{{ 'General_No'|translate }}</label>
-                    </p>
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_format_numbers_desc'|translate }}</div>
-                </div>
+            <div piwik-field uicontrol="radio" name="format_numbers"
+                 value="0"
+                 title="{{ 'Counter_Params_format_numbers_label'|translate }}"
+                 options='{1: "{{ 'General_Yes'|translate }}", 0: "{{ 'General_No'|translate }}"}'
+                 inline-help="{{ 'Counter_Params_format_numbers_desc'|translate }}">
             </div>
 
-            <div class="form-group row">
-                <h3 class="col s12">{{ 'Counter_Params_publish'|translate }}</h3>
-
-                <div class="col s12 m6">
-                    <p>
-                        <input type="radio" name="published" id="published_y" value="1" checked="checked" />
-                        <label class="radio" for="published_y">{{ 'General_Yes'|translate }}</label>
-                    </p>
-
-                    <p>
-                        <input type="radio" name="published" id="published_n" value="0" />
-                        <label class="radio" for="published_n">{{ 'General_No'|translate }}</label>
-                    </p>
-                </div>
+            <div piwik-field uicontrol="radio" name="published"
+                 value="1"
+                 title="{{ 'Counter_Params_publish'|translate }}"
+                 options='{1: "{{ 'General_Yes'|translate }}", 0: "{{ 'General_No'|translate }}"}'>
             </div>
 
             <p class="separator_parent"><strong>{{ 'Counter_Params_pos_sep'|translate }}</strong></p>
             <p class="separator_children"><strong>{{ 'Counter_Params_pos_sep_sitename'|translate }}</strong></p>
 
-            <div class="form-group row">
-                <h3 class="col s12">{{ 'Counter_Params_show_sitename'|translate }}</h3>
-
-                <div class="col s12 m6">
-                    <p>
-                        <input type="radio" name="show_sitename" id="show_sitename_y" value="1" checked="checked" />
-                        <label class="radio" for="show_sitename_y">{{ 'General_Yes'|translate }}</label>
-                    </p>
-
-                    <p>
-                        <input type="radio" name="show_sitename" id="show_sitename_n" value="0" />
-                        <label class="radio" for="show_sitename_n">{{ 'General_No'|translate }}</label>
-                    </p>
-                </div>
+            <div piwik-field uicontrol="radio" name="show_sitename"
+                 value="1"
+                 title="{{ 'Counter_Params_show_sitename'|translate }}"
+                 options='{1: "{{ 'General_Yes'|translate }}", 0: "{{ 'General_No'|translate }}"}'>
             </div>
 
-            <div class="form-group row sitename">
-                <h3 class="col s12">{{ 'Counter_Params_sitename_pos_label'|translate }}</h3>
+            <div piwik-field uicontrol="text" name="sitename_pos_x" id="sitename_pos_x" maxlength="3"
+                 value="3"
+                 introduction="{{ 'Counter_Params_sitename_pos_label'|translate }}"
+                 title="{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}"
+                 inline-help="{{ 'Counter_Params_visitors_pos_desc'|translate }}">
+            </div>
 
-                <div class="input-field col s12 m6">
-                    <input type="text" name="sitename_pos_x" value="3" id="sitename_pos_x" size="4" maxlength="3"/>
-                    {{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
-                </div>
-
-                <div class="clearfix visible-xs-block"></div>
-
-                <div class="input-field col s12 m6">
-                    <input type="text" name="sitename_pos_y" value="13" id="sitename_pos_y" size="4" maxlength="3" required/>
-                    {{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
-                </div>
+            <div piwik-field uicontrol="text" name="sitename_pos_y" id="sitename_pos_y" maxlength="3"
+                 value="13"
+                 title="{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}">
             </div>
 
             <div class="form-group row">
@@ -270,52 +218,30 @@
                 </div>
             </div>
 
-            <div class="form-group row">
-                <div class="input-field col s12 m6">
-                    <input type="text" name="sitename_font_size" value="7" id="sitename_font_size" size="3" maxlength="2"
-                           required/>
-                    <label for="sitename_font_size">{{ 'Counter_Params_fontsize'|translate }}</label>
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
-                </div>
+            <div piwik-field uicontrol="text" name="sitename_font_size" id="sitename_font_size" maxlength="2"
+                 value="7"
+                 title="{{ 'Counter_Params_fontsize'|translate }}"
+                 inline-help="{{ 'Counter_Params_fontsize_desc'|translate }}">
             </div>
 
             <p class="separator_children"><strong>{{ 'Counter_Params_pos_sep_visits'|translate }}</strong></p>
 
-            <div class="form-group row">
-                <h3 class="col s12">{{ 'Counter_Params_show_visits'|translate }}</h3>
-
-                <div class="col s12 m6">
-                    <p>
-                        <input type="radio" name="show_visits" id="show_visits_y" value="1" checked="checked" />
-                        <label class="radio" for="show_visits_y">{{ 'General_Yes'|translate }}</label>
-                    </p>
-
-                    <p>
-                        <input type="radio" name="show_visits" id="show_visits_n" value="0" />
-                        <label class="radio" for="show_visits_n">{{ 'General_No'|translate }}</label>
-                    </p>
-                </div>
+            <div piwik-field uicontrol="radio" name="show_visits"
+                 value="1"
+                 title="{{ 'Counter_Params_show_visits'|translate }}"
+                 options='{1: "{{ 'General_Yes'|translate }}", 0: "{{ 'General_No'|translate }}"}'>
             </div>
 
-            <div class="form-group row sitename">
-                <h3 class="col s12">{{ 'Counter_Params_visitors_pos_label'|translate }}</h3>
+            <div piwik-field uicontrol="text" name="visitors_pos_x" id="visitors_pos_x" maxlength="3"
+                 value="3"
+                 introduction="{{ 'Counter_Params_visitors_pos_label'|translate }}"
+                 title="{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}"
+                 inline-help="{{ 'Counter_Params_visitors_pos_desc'|translate }}">
+            </div>
 
-                <div class="input-field col s12 m6">
-                    <input type="text" name="visitors_pos_x" value="3" id="visitors_pos_x" size="4" maxlength="3" required/>
-                    {{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
-                </div>
-
-                <div class="clearfix visible-xs-block"></div>
-
-                <div class="input-field col s12 m6">
-                    <input type="text" name="visitors_pos_y" value="13" id="visitors_pos_y" size="4" maxlength="3" required/>
-                    {{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
-                </div>
+            <div piwik-field uicontrol="text" name="visitors_pos_y" id="visitors_pos_y" maxlength="3"
+                 value="26"
+                 title="{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}">
             </div>
 
             <div class="form-group row">
@@ -326,52 +252,30 @@
                 </div>
             </div>
 
-            <div class="form-group row">
-                <div class="input-field col s12 m6">
-                    <input type="text" name="visits_font_size" value="7" id="visits_font_size" size="3" maxlength="2"
-                           required/>
-                    <label for="visits_font_size">{{ 'Counter_Params_fontsize'|translate }}</label>
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
-                </div>
+            <div piwik-field uicontrol="text" name="visits_font_size" id="visits_font_size" maxlength="2"
+                 value="7"
+                 title="{{ 'Counter_Params_fontsize'|translate }}"
+                 inline-help="{{ 'Counter_Params_fontsize_desc'|translate }}">
             </div>
 
             <p class="separator_children"><strong>{{ 'Counter_Params_pos_sep_hits'|translate }}</strong></p>
 
-            <div class="form-group row">
-                <h3 class="col s12">{{ 'Counter_Params_show_views'|translate }}</h3>
-
-                <div class="col s12 m6">
-                    <p>
-                        <input type="radio" name="show_views" id="show_views_y" value="1" checked="checked" />
-                        <label class="radio" for="show_views_y">{{ 'General_Yes'|translate }}</label>
-                    </p>
-
-                    <p>
-                        <input type="radio" name="show_views" id="show_views_n" value="0" />
-                        <label class="radio" for="show_views_n">{{ 'General_No'|translate }}</label>
-                    </p>
-                </div>
+            <div piwik-field uicontrol="radio" name="show_views"
+                 value="1"
+                 title="{{ 'Counter_Params_show_views'|translate }}"
+                 options='{1: "{{ 'General_Yes'|translate }}", 0: "{{ 'General_No'|translate }}"}'>
             </div>
 
-            <div class="form-group row views">
-                <h3 class="col s12">{{ 'Counter_Params_views_pos_label'|translate }}</h3>
+            <div piwik-field uicontrol="text" name="views_pos_x" id="views_pos_x" maxlength="3"
+                 value="30"
+                 introduction="{{ 'Counter_Params_visitors_pos_label'|translate }}"
+                 title="{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}"
+                 inline-help="{{ 'Counter_Params_visitors_pos_desc'|translate }}">
+            </div>
 
-                <div class="input-field col s12 m6">
-                    <input type="text" name="views_pos_x" value="3" id="views_pos_x" size="4" maxlength="3" required/>
-                    {{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_left'|translate }}
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_visitors_pos_desc'|translate }}</div>
-                </div>
-
-                <div class="clearfix visible-xs-block"></div>
-
-                <div class="input-field col s12 m6">
-                    <input type="text" name="views_pos_y" value="13" id="views_pos_y" size="4" maxlength="3" required/>
-                    {{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}
-                </div>
+            <div piwik-field uicontrol="text" name="views_pos_y" id="views_pos_y" maxlength="3"
+                 value="26"
+                 title="{{ 'Counter_Params_img_size_px'|translate }} {{ 'Counter_Params_padd_top'|translate }}">
             </div>
 
             <div class="form-group row">
@@ -382,15 +286,10 @@
                 </div>
             </div>
 
-            <div class="form-group row">
-                <div class="input-field col s12 m6">
-                    <input type="text" name="hits_font_size" value="7" id="hits_font_size" size="3" maxlength="2"
-                           required/>
-                    <label for="hits_font_size">{{ 'Counter_Params_fontsize'|translate }}</label>
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_fontsize_desc'|translate }}</div>
-                </div>
+            <div piwik-field uicontrol="text" name="hits_font_size" id="hits_font_size" maxlength="2"
+                 value="7"
+                 title="{{ 'Counter_Params_fontsize'|translate }}"
+                 inline-help="{{ 'Counter_Params_fontsize_desc'|translate }}">
             </div>
 
             <p class="separator_parent">&nbsp;</p>
@@ -431,24 +330,11 @@
                 </div>
             </div>
 
-            <div class="form-group row">
-                <h3 class="col s12">{{ 'Counter_Params_cache'|translate }}</h3>
-
-                <div class="col s12 m6">
-                    <p>
-                        <input type="radio" name="cache" id="cache_y" value="1" checked="checked" />
-                        <label class="radio" for="cache_y">{{ 'General_Yes'|translate }}</label>
-                    </p>
-
-                    <p>
-                        <input type="radio" name="cache" id="cache_n" value="0" />
-                        <label class="radio" for="cache_n">{{ 'General_No'|translate }}</label>
-                    </p>
-                    <span id="cache"></span>
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_cache_off'|translate }}</div>
-                </div>
+            <div piwik-field uicontrol="radio" name="cache"
+                 value="1"
+                 title="{{ 'Counter_Params_cache'|translate }}"
+                 options='{1: "{{ 'General_Yes'|translate }}", 0: "{{ 'General_No'|translate }}"}'
+                 inline-help="{{ 'Counter_Params_cache_off'|translate }}">
             </div>
 
             <div class="form-group row">
@@ -462,14 +348,10 @@
                 </div>
             </div>
 
-            <div class="form-group row">
-                <div class="input-field col s12 m6">
-                    <input type="text" name="token" value="{{ data.params.token }}" id="token" size="70" maxlength="64" required/>
-                    <label for="token">{{ 'Counter_Params_token_auth'|translate }}</label>
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_token_auth_desc'|translate }}</div>
-                </div>
+            <div piwik-field uicontrol="text" name="token" id="token" maxlength="64"
+                 value="{{ data.item.params.token }}"
+                 title="{{ 'Counter_Params_token_auth'|translate }}"
+                 inline-help="{{ 'Counter_Params_token_auth_desc'|translate }}">
             </div>
 
             <p class="separator_parent"><strong>{{ 'Counter_Params_live_sep'|translate }}</strong></p>
@@ -493,64 +375,37 @@
                 </div>
             </div>
 
-            <div class="form-group row">
-                <h3 class="col s12">{{ 'Counter_Params_live_static'|translate }}</h3>
-
-                <div class="col s12 m6">
-                    <p>
-                        <input type="radio" name="static" id="static_y" value="1" checked="checked" />
-                        <label class="radio" for="static_y">{{ 'General_Yes'|translate }}</label>
-                    </p>
-
-                    <p>
-                        <input type="radio" name="static" id="static_n" value="0" />
-                        <label class="radio" for="static_n">{{ 'General_No'|translate }}</label>
-                    </p>
-                    <span id="cache"></span>
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_live_static_desc'|translate }}</div>
-                </div>
+            <div piwik-field uicontrol="radio" name="static"
+                 value="1"
+                 title="{{ 'Counter_Params_live_static'|translate }}"
+                 options='{1: "{{ 'General_Yes'|translate }}", 0: "{{ 'General_No'|translate }}"}'
+                 inline-help="{{ 'Counter_Params_live_static_desc'|translate }}">
             </div>
 
-            <div class="form-group row">
-                <div class="input-field col s12 m6">
-                    <input type="text" name="livestat_elem_id" id="livestat_elem_id" size="70"/>
-                    <label for="livestat_elem_id">{{ 'Counter_Params_live_elemid'|translate }}</label>
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_live_elemid_desc'|translate|raw }}</div>
-                </div>
+            <div piwik-field uicontrol="text" name="livestat_elem_id" id="livestat_elem_id"
+                 value=""
+                 title="{{ 'Counter_Params_live_elemid'|translate }}"
+                 inline-help="{{ 'Counter_Params_live_elemid_desc'|translate|e('html_attr') }}">
             </div>
 
             <p class="separator_parent"><strong>{{ 'Counter_Params_tpl_by_countries_sep'|translate }}</strong></p>
 
-            <div class="form-group row">
-                <h6 class="col s12"><label for="tpl_by_countries">{{ 'Counter_Params_tpl_by_countries'|translate }}</label></h6>
-
-                <div class="input-field col s12 m6">
-                    <div class="ng-scope">
-                        <textarea name="tpl_by_countries" id="tpl_by_countries" cols="50" rows="5" spellcheck="false" class="materialize-textarea ng-pristine ng-valid ng-touched"></textarea>
-                    </div>
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_tpl_by_countries_desc'|translate|raw }}</div>
-                </div>
+            <div piwik-field uicontrol="textarea" name="tpl_by_countries" id="tpl_by_countries"
+                 value=""
+                 title="{{ 'Counter_Params_tpl_by_countries'|translate }}"
+                 inline-help="{{ 'Counter_Params_tpl_by_countries_desc'|translate|e('html_attr') }}">
             </div>
 
-            <div class="form-group row">
-                <div class="input-field col s12 m6">
-                    <input type="text" name="tpl_by_countries_elem_id" id="tpl_by_countries_elem_id" size="70"/>
-                    <label for="tpl_by_countries_elem_id">{{ 'Counter_Params_live_elemid'|translate }}</label>
-                </div>
-                <div class="col s12 m6">
-                    <div class="form-help ng-binding ng-scope">{{ 'Counter_Params_live_elemid_desc'|translate|raw }}</div>
-                </div>
+            <div piwik-field uicontrol="text" name="tpl_by_countries_elem_id" id="tpl_by_countries_elem_id"
+                 value=""
+                 title="{{ 'Counter_Params_live_elemid'|translate }}"
+                 inline-help="{{ 'Counter_Params_live_elemid_desc'|translate|e('html_attr') }}">
             </div>
 
             <input type="hidden" name="module" value="Counter"/>
             <input type="hidden" name="action" value="" id="action"/>
             <input type="hidden" name="id" value=""/>
+            <input type="hidden" name="nonce" value="{{ data.formNonce }}"/>
 
             <input type="button" value="{{ 'General_Save'|translate }}" class="btn save"/>
             <input type="button" value="{{ 'Counter_Apply'|translate }}" class="btn apply"/>
