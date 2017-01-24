@@ -62,60 +62,6 @@ class API extends \Piwik\Plugin\API
     }
 
     /**
-     * Method to get a list of sites.
-     *
-     * @return  array
-     */
-    public function getSitesList()
-    {
-        $result = $this->getModel()->getSitesList();
-
-        return $result;
-    }
-
-    /**
-     * Method to change the published state of one or more records.
-     *
-     * @param   array    $ids    A list of the primary keys to change.
-     * @param   integer  $state  The value of the published state.
-     *
-     * @return  boolean  True on success.
-     */
-    public function publish($ids, $state = 1)
-    {
-        if (empty($ids)) {
-            return false;
-        }
-
-        $this->checkAccess();
-
-        $result = $this->getModel()->publish($ids, $state);
-
-        return $result;
-    }
-
-    /**
-     * Remove counter(s) from DB and clear the image cache.
-     *
-     * @param   array  $ids  A list of the primary keys to remove.
-     *
-     * @return  boolean  True on success.
-     */
-    public function remove($ids)
-    {
-        if (empty($ids)) {
-            return false;
-        }
-
-        $this->checkAccess();
-
-        $this->clearCache($ids);
-        $result = $this->getModel()->remove($ids);
-
-        return $result;
-    }
-
-    /**
      * Method to check if counter exists for that site
      *
      * @param   integer  $idsite  Site ID
@@ -153,22 +99,6 @@ class API extends \Piwik\Plugin\API
         }
 
         return false;
-    }
-
-    /**
-     * Method to save the data into DB
-     *
-     * @return   mixed  Return lastInsertID or item ID on update, false on error.
-     */
-    public function save()
-    {
-        $this->checkAccess();
-
-        $model = $this->getModel();
-        $data = $model->getForm(true);
-        $result = $model->save($data);
-
-        return $result;
     }
 
     /**
@@ -377,6 +307,8 @@ class API extends \Piwik\Plugin\API
         }
 
         if (!empty($params['params']['img_path']) && file_exists($params['params']['img_path'])) {
+            header_remove('X-Powered-By');
+
             $mime = $this->getMime($params['params']['img_path']);
             $dst_im = imagecreatetruecolor($params['params']['img_size_x'], $params['params']['img_size_y']);
 

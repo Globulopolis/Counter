@@ -189,6 +189,7 @@ class Model
         }
 
         $result['origins'] = $origins;
+        $result['sites'] = $this->getSitesList();
 
         return $result;
     }

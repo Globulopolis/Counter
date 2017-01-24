@@ -9,9 +9,9 @@
 
 namespace Piwik\Plugins\Counter;
 
-use Piwik\Access;
 use Piwik\Common;
 use Piwik\DataTable\Renderer\Json;
+use Piwik\Nonce;
 use Piwik\Plugin;
 use Piwik\Plugins\SitesManager\API as APISitesManager;
 use Piwik\Translation\Translator;
@@ -54,7 +54,11 @@ class Controller extends Plugin\Controller
         $this->setBasicVariablesView($view);
         $this->setGeneralVariablesView($view);
         $view->counters = $this->api->getItems();
-        $view->plugin_info = $this->api->getPluginInfo();
+        $view->data = (object) array(
+            'plugin_info' => $this->api->getPluginInfo(),
+            'formNonce'   => Nonce::getNonce('Counter.index'),
+            'cacheNonce'  => Nonce::getNonce('Counter.cacheClear')
+        );
 
         $viewableIdSites = APISitesManager::getInstance()->getSitesIdWithAtLeastViewAccess();
         $defaultIdSite = reset($viewableIdSites);
@@ -76,10 +80,37 @@ class Controller extends Plugin\Controller
         $this->publish(0);
     }
 
+    /**
+     * Method to change the published state of one or more records.
+     *
+     * @param   integer  $state  The value of the published state.
+     *
+     * @return  void
+     */
     public function publish($state = 1)
     {
+        $nonce = Common::getRequestVar('nonce', null, 'string');
+
+        if (!Nonce::verifyNonce('Counter.index', $nonce)) {
+            $this->api->enqueueMessage($this->translator->translate('General_ExceptionNonceMismatch'), 'error');
+            $this->redirectToIndex('Counter', 'index');
+
+            return;
+        }
+
+        $this->api->checkAccess();
+
         $ids = Common::getRequestVar('id', array(), 'array');
-        $result = $this->api->publish($ids, $state);
+
+        if (empty($ids)) {
+            $this->api->enqueueMessage($this->translator->translate('Counter_List_make_selection'), 'error');
+            $this->redirectToIndex('Counter', 'index');
+
+            return;
+        }
+
+        $model = new Model();
+        $result = $model->publish($ids, $state);
 
         if (!$result) {
             $this->api->enqueueMessage($this->translator->translate('Counter_Error_has_occurred'), 'error');
@@ -104,15 +135,36 @@ class Controller extends Plugin\Controller
         $this->redirectToIndex('Counter', 'index');
     }
 
+    /**
+     * Remove counter(s) from DB and clear the image cache.
+     *
+     * @return  boolean  True on success.
+     */
     public function remove()
     {
-        $ids = Common::getRequestVar('id', array(), 'array');
-        $result = $this->api->remove($ids);
+        $nonce = Common::getRequestVar('nonce', null, 'string');
 
-        if (strtolower(Common::getRequestVar('format', '', 'string')) === 'json') {
-            Json::sendHeaderJSON();
-            echo json_encode(array('success' => $result));
+        if (!Nonce::verifyNonce('Counter.index', $nonce)) {
+            $this->api->enqueueMessage($this->translator->translate('General_ExceptionNonceMismatch'), 'error');
+            $this->redirectToIndex('Counter', 'index');
+
+            return;
         }
+
+        $this->api->checkAccess();
+
+        $ids = Common::getRequestVar('id', array(), 'array');
+
+        if (empty($ids)) {
+            $this->api->enqueueMessage($this->translator->translate('Counter_List_make_selection'), 'error');
+            $this->redirectToIndex('Counter', 'index');
+
+            return;
+        }
+
+        $model = new Model();
+        $this->api->clearCache($ids);
+        $result = $model->remove($ids);
 
         if (!$result) {
             $this->api->enqueueMessage($this->translator->translate('Counter_Remove_error'), 'error');
@@ -131,6 +183,12 @@ class Controller extends Plugin\Controller
 
     public function clearCache()
     {
+        $nonce = Common::getRequestVar('c_nonce', null, 'string');
+
+        if (!Nonce::verifyNonce('Counter.cacheClear', $nonce)) {
+            throw new \Exception($this->translator->translate('General_ExceptionNonceMismatch'));
+        }
+
         $result = $this->api->clearCache(Common::getRequestVar('id', array(), 'array'));
 
         if (strtolower(Common::getRequestVar('format', '', 'string')) === 'json') {
@@ -151,43 +209,29 @@ class Controller extends Plugin\Controller
 
     public function create()
     {
-        $this->api->checkAccess();
-
-        $view = new View('@Counter/' . $this->template . '_add.twig');
-        $this->setBasicVariablesView($view);
-        $this->setGeneralVariablesView($view);
-        $view->token = Access::getInstance()->getTokenAuth();
-        $view->plugin_info = $this->api->getPluginInfo();
-
-        $viewableIdSites = APISitesManager::getInstance()->getSitesIdWithAtLeastViewAccess();
-        $defaultIdSite = reset($viewableIdSites);
-        $view->idSite = Common::getRequestVar('idSite', $defaultIdSite, 'int');
-
-        $view->period = Common::getRequestVar('period', 'day', 'string');
-        $view->date = Common::getRequestVar('date', 'yesterday', 'string');
-        $view->list_sites = $this->api->getSitesList();
-        $view->data = $this->api->getItem();
-
-        return $view->render();
+        return $this->edit('add');
     }
 
-    public function edit()
+    public function edit($tpl = 'edit')
     {
         $this->api->checkAccess();
 
-        $view = new View('@Counter/' . $this->template . '_edit.twig');
+        $view = new View('@Counter/' . $this->template . '_' . $tpl . '.twig');
         $this->setBasicVariablesView($view);
         $this->setGeneralVariablesView($view);
-        $view->plugin_info = $this->api->getPluginInfo();
+        $view->data = (object) array(
+            'plugin_info' => $this->api->getPluginInfo(),
+            'item'        => $this->api->getItem(),
+            'formNonce'   => Nonce::getNonce('Counter.formEdit'),
+            'cacheNonce'  => Nonce::getNonce('Counter.cacheClear')
+        );
 
+        // Some request vars
         $viewableIdSites = APISitesManager::getInstance()->getSitesIdWithAtLeastViewAccess();
         $defaultIdSite = reset($viewableIdSites);
         $view->idSite = Common::getRequestVar('idSite', $defaultIdSite, 'int');
-
         $view->period = Common::getRequestVar('period', 'day', 'string');
         $view->date = Common::getRequestVar('date', 'yesterday', 'string');
-        $view->list_sites = $this->api->getSitesList();
-        $view->data = $this->api->getItem();
 
         return $view->render();
     }
@@ -199,7 +243,20 @@ class Controller extends Plugin\Controller
 
     public function apply($task = 'apply')
     {
-        $result = $this->api->save();
+        $nonce = Common::getRequestVar('nonce', null, 'string');
+
+        if (!Nonce::verifyNonce('Counter.formEdit', $nonce)) {
+            $this->api->enqueueMessage($this->translator->translate('General_ExceptionNonceMismatch'), 'error');
+            $this->redirectToIndex('Counter', 'index');
+
+            return;
+        }
+
+        $this->api->checkAccess();
+
+        $model = new Model();
+        $data = $model->getForm(true);
+        $result = $model->save($data);
 
         if (!$result) {
             $this->api->enqueueMessage($this->translator->translate('Counter_Save_error'), 'error');
