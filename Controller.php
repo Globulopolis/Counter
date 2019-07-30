@@ -9,6 +9,7 @@
 
 namespace Piwik\Plugins\Counter;
 
+use Exception;
 use Piwik\Common;
 use Piwik\DataTable\Renderer\Json;
 use Piwik\Nonce;
@@ -83,9 +84,10 @@ class Controller extends Plugin\Controller
     /**
      * Method to change the published state of one or more records.
      *
-     * @param   integer  $state  The value of the published state.
+     * @param    integer  $state  The value of the published state.
      *
-     * @return  void
+     * @return   void
+     * @throws   Exception
      */
     public function publish($state = 1)
     {
@@ -138,7 +140,8 @@ class Controller extends Plugin\Controller
     /**
      * Remove counter(s) from DB and clear the image cache.
      *
-     * @return  boolean  True on success.
+     * @return   mixed|void
+     * @throws   Exception
      */
     public function remove()
     {
