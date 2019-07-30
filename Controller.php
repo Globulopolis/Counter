@@ -17,6 +17,7 @@ use Piwik\Plugin;
 use Piwik\Plugins\SitesManager\API as APISitesManager;
 use Piwik\Translation\Translator;
 use Piwik\View;
+use Exception;
 
 class Controller extends Plugin\Controller
 {
