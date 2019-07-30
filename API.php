@@ -18,7 +18,6 @@ use Piwik\Notification;
 use Piwik\Piwik;
 use Piwik\Plugin\Manager as Manager;
 use Piwik\Plugins\SitesManager\API as SitesManager;
-use Zend_Cache;
 
 /**
  * Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text via ajax requests.
@@ -40,7 +39,8 @@ class API extends \Piwik\Plugin\API
     /**
      * Method to get a counter data.
      *
-     * @return  mixed  Array on success, false otherwise
+     * @return   mixed       Array on success, false otherwise
+     * @throws   Exception
      */
     public function getItem()
     {
@@ -82,7 +82,8 @@ class API extends \Piwik\Plugin\API
     /**
      * Method to check if file exists.
      *
-     * @return  string
+     * @return   string
+     * @throws   Exception
      */
     public function checkPath()
     {
@@ -109,7 +110,8 @@ class API extends \Piwik\Plugin\API
      * @param    string   $type      Message type. See TYPE_* in core/Notification.php fot valid message types.
      * @param    integer  $priority  Priority. See PRIORITY_* in core/Notification.php fot valid message priorities.
      *
-     * @return    void
+     * @return   void
+     * @throws   Exception
      */
     public function enqueueMessage($message, $style = 'info', $type = 'transient', $priority = 0)
     {
@@ -165,7 +167,6 @@ class API extends \Piwik\Plugin\API
      * @param   boolean  $is_index  True if counter data requested from frontpage
      *
      * @return  boolean
-     *
      * @throws  Exception
      */
     public function checkAccess($is_index = false)
@@ -222,6 +223,7 @@ class API extends \Piwik\Plugin\API
      * @param    array  $params  An array with the counter data.
      *
      * @return   mixed
+     * @throws   Exception
      */
     private function createImage($params = array())
     {
@@ -398,12 +400,13 @@ class API extends \Piwik\Plugin\API
      * Show image from cache or create if it not exists
      *
      * @return   void
+     * @throws   Exception
      */
     public function showImage()
     {
         $id = Common::getRequestVar('id', 0, 'int');
         $params = $this->getItem();
-        $cache_id = 'counter_image_' . md5($id) . '_' . $id;
+        $cacheId = 'counter_image_' . md5($id) . '_' . $id;
 
         // If the counter has not been published - output an 1x1 transparent gif
         if ($params['published'] != 1) {
@@ -419,26 +422,27 @@ class API extends \Piwik\Plugin\API
         }
 
         if ($params['params']['cache'] == 1) {
-            $cache = Zend_Cache::factory('Output', 'File',
+            require_once __DIR__ . '/Cache.php';
+
+            $cache = new CounterCache(
                 array(
-                    'lifetime' => (int)$params['params']['cache_time'],
-                    'automatic_serialization' => false
-                ),
-                array(
-                    'cache_dir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT . '/tmp/cache/')
+                    'cacheDir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT . '/tmp/cache/'),
+                    'cacheId'  => $cacheId
                 )
             );
 
             // Test if cache is available
-            if ($cache->test($cache_id)) {
+            if ($cache->validate()) {
                 $mime = $this->getMime($params['params']['img_path']);
                 header('Content-type: ' . $mime);
 
                 // Load and output image from cache
-                echo $cache->load($cache_id, true);
-            } else {
+               // echo $cache->load();
+            }
+            else
+            {
                 // Build new image and save into cache
-                if (!$cache->start($cache_id)) {
+                if (!$cache->start((int)$params['params']['cache_time'])) {
                     $this->createImage();
                     $cache->end();
                 }
@@ -452,6 +456,7 @@ class API extends \Piwik\Plugin\API
      * Create image for preview while editing counter data. For backend only. This method do not use cache.
      *
      * @return   void
+     * @throws   Exception
      */
     public function previewImage()
     {
@@ -463,7 +468,8 @@ class API extends \Piwik\Plugin\API
     /**
      * Method to get live visitors count
      *
-     * @return    void
+     * @return   void
+     * @throws   Exception
      */
     public function getLiveVisitorsCount()
     {
@@ -648,6 +654,7 @@ class API extends \Piwik\Plugin\API
      * @param    array  $ids  A list of the primary keys.
      *
      * @return   boolean  True on success.
+     * @throws   Exception
      */
     public function clearCache($ids)
     {
@@ -659,11 +666,12 @@ class API extends \Piwik\Plugin\API
             $this->checkAccess();
         }
 
+        require_once __DIR__ . '/Cache.php';
+
         $errors = array();
-        $cache = Zend_Cache::factory('Output', 'File',
-            array(),
+        $cache = new CounterCache(
             array(
-                'cache_dir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT . '/tmp/cache/')
+                'cacheDir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT . '/tmp/cache/')
             )
         );
 
@@ -729,6 +737,13 @@ class API extends \Piwik\Plugin\API
         return $mime;
     }
 
+    /**
+     * Format number to a human readable.
+     *
+     * @param   integer  $number  Number
+     *
+     * @return  string
+     */
     private function formatNumber($number)
     {
         if ($number > 1000000000000) {
@@ -746,6 +761,13 @@ class API extends \Piwik\Plugin\API
         return $number;
     }
 
+    /**
+     * Convert hex color to rgb.
+     *
+     * @param   string  $rgb  Color code
+     *
+     * @return  array
+     */
     private function rgb2array($rgb)
     {
         $rgb = str_replace('#', '', $rgb);
@@ -757,6 +779,11 @@ class API extends \Piwik\Plugin\API
         );
     }
 
+    /**
+     * Init plugin model.
+     *
+     * @return  object
+     */
     private function getModel()
     {
         return new Model();

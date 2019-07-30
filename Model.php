@@ -36,9 +36,10 @@ class Model
     /**
      * Get the vars from edit form and filter them.
      *
-     * @param   boolean  $encode  Encode 'params' array into JSON string.
+     * @param    boolean  $encode  Encode 'params' array into JSON string.
      *
-     * @return  array
+     * @return   array
+     * @throws   Exception
      */
     public function getForm($encode = false)
     {
@@ -102,9 +103,10 @@ class Model
     /**
      * Get the list of counters
      *
-     * @param   boolean  $return_id  Return only primary keys of counters.
+     * @param    boolean  $return_id  Return only primary keys of counters.
      *
-     * @return  array
+     * @return   array
+     * @throws   Exception
      */
     public function getItems($return_id = false)
     {
@@ -197,7 +199,8 @@ class Model
     /**
      * Get the list of all sites.
      *
-     * @return  array
+     * @return   array
+     * @throws   Exception
      */
     public function getSitesList()
     {
@@ -211,9 +214,10 @@ class Model
     /**
      * Method to check if counter for that site is allready exists.
      *
-     * @param   integer  $idsite  Site ID.
+     * @param    integer   $idsite  Site ID.
      *
-     * @return  boolean  True if counter exists for $idsite, false otherwise.
+     * @return   boolean   True if counter exists for $idsite, false otherwise.
+     * @throws   Exception
      */
     public function counterExists($idsite)
     {
@@ -229,12 +233,11 @@ class Model
     /**
      * Method to change the published state of one or more records.
      *
-     * @param   array    $ids    IDs
-     * @param   boolean  $state  Action state
+     * @param    array    $ids    IDs
+     * @param    boolean  $state  Action state
      *
-     * @return  boolean  True on success.
-     *
-     * @since   3.0
+     * @return   boolean  True on success.
+     * @throws   Exception
      */
     public function publish($ids, $state)
     {
@@ -254,11 +257,10 @@ class Model
     /**
      * Method to save the form data.
      *
-     * @param   array  $data  The form data.
+     * @param    array  $data  The form data.
      *
-     * @return  boolean  True on success.
-     *
-     * @since   3.0
+     * @return   boolean  True on success.
+     * @throws   Exception
      */
     public function save($data)
     {

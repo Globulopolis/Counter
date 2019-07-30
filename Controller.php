@@ -16,6 +16,7 @@ use Piwik\Plugin;
 use Piwik\Plugins\SitesManager\API as APISitesManager;
 use Piwik\Translation\Translator;
 use Piwik\View;
+use Exception;
 
 class Controller extends Plugin\Controller
 {
@@ -86,6 +87,7 @@ class Controller extends Plugin\Controller
      * @param   integer  $state  The value of the published state.
      *
      * @return  void
+     * @throws  \Exception
      */
     public function publish($state = 1)
     {
@@ -138,7 +140,8 @@ class Controller extends Plugin\Controller
     /**
      * Remove counter(s) from DB and clear the image cache.
      *
-     * @return  boolean  True on success.
+     * @return   mixed|void
+     * @throws   Exception
      */
     public function remove()
     {

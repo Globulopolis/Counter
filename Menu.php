@@ -20,6 +20,8 @@ class Menu extends \Piwik\Plugin\Menu
     /**
      * Configures the admin menu which is supposed to contain only administration related items such as
      * "Websites", "Users" or "Settings".
+     *
+     * @param   mixed  $menu  Matomo menu object.
      */
     public function configureAdminMenu(MenuAdmin $menu)
     {

@@ -42,6 +42,8 @@ class Counter extends Plugin
 
     /**
      * Executed every time the plugin is enabled.
+     *
+     * @throws   Exception
      */
     public function activate()
     {
@@ -50,6 +52,8 @@ class Counter extends Plugin
 
     /**
      * Installs the plugin.
+     *
+     * @throws   Exception
      */
     public function install()
     {
