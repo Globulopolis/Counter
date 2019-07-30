@@ -9,6 +9,7 @@
 
 namespace Piwik\Plugins\Counter;
 
+use Exception;
 use Piwik\Common;
 use Piwik\DataTable\Renderer\Json;
 use Piwik\Nonce;
