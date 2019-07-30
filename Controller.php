@@ -9,7 +9,6 @@
 
 namespace Piwik\Plugins\Counter;
 
-use Exception;
 use Piwik\Common;
 use Piwik\DataTable\Renderer\Json;
 use Piwik\Nonce;
@@ -17,6 +16,7 @@ use Piwik\Plugin;
 use Piwik\Plugins\SitesManager\API as APISitesManager;
 use Piwik\Translation\Translator;
 use Piwik\View;
+use Exception;
 
 class Controller extends Plugin\Controller
 {
@@ -84,10 +84,10 @@ class Controller extends Plugin\Controller
     /**
      * Method to change the published state of one or more records.
      *
-     * @param    integer  $state  The value of the published state.
+     * @param   integer  $state  The value of the published state.
      *
-     * @return   void
-     * @throws   Exception
+     * @return  void
+     * @throws  \Exception
      */
     public function publish($state = 1)
     {
