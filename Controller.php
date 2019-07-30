@@ -9,6 +9,7 @@
 
 namespace Piwik\Plugins\Counter;
 
+use Exception;
 use Piwik\Common;
 use Piwik\DataTable\Renderer\Json;
 use Piwik\Nonce;
@@ -16,7 +17,6 @@ use Piwik\Plugin;
 use Piwik\Plugins\SitesManager\API as APISitesManager;
 use Piwik\Translation\Translator;
 use Piwik\View;
-use Exception;
 
 class Controller extends Plugin\Controller
 {

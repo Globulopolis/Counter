@@ -437,7 +437,7 @@ class API extends \Piwik\Plugin\API
                 header('Content-type: ' . $mime);
 
                 // Load and output image from cache
-               // echo $cache->load();
+                echo $cache->load();
             }
             else
             {
