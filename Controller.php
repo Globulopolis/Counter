@@ -9,7 +9,6 @@
 
 namespace Piwik\Plugins\Counter;
 
-use Exception;
 use Piwik\Common;
 use Piwik\DataTable\Renderer\Json;
 use Piwik\Nonce;
@@ -17,7 +16,6 @@ use Piwik\Plugin;
 use Piwik\Plugins\SitesManager\API as APISitesManager;
 use Piwik\Translation\Translator;
 use Piwik\View;
-use Exception;
 
 class Controller extends Plugin\Controller
 {
@@ -50,33 +48,45 @@ class Controller extends Plugin\Controller
         parent::__construct();
     }
 
+	/**
+	 * Plugin entry point.
+	 *
+	 * @return   string
+	 * @throws   \Exception
+	 */
     public function index()
     {
-        $view = new View('@Counter/' . $this->template . '.twig');
-        $this->setBasicVariablesView($view);
-        $this->setGeneralVariablesView($view);
-        $view->counters = $this->api->getItems();
-        $view->data = (object) array(
-            'plugin_info' => $this->api->getPluginInfo(),
-            'formNonce'   => Nonce::getNonce('Counter.index'),
-            'cacheNonce'  => Nonce::getNonce('Counter.cacheClear')
-        );
+	    $view = new View('@Counter/' . $this->template . '.twig');
+	    $this->setBasicVariablesView($view);
+	    $this->setGeneralVariablesView($view);
+	    $view->counters = $this->api->getItems();
+	    $view->data     = (object) array(
+		    'plugin_info' => $this->api->getPluginInfo(),
+		    'formNonce'   => Nonce::getNonce('Counter.index'),
+		    'cacheNonce'  => Nonce::getNonce('Counter.cacheClear')
+	    );
 
-        $viewableIdSites = APISitesManager::getInstance()->getSitesIdWithAtLeastViewAccess();
-        $defaultIdSite = reset($viewableIdSites);
-        $view->idSite = Common::getRequestVar('idSite', $defaultIdSite, 'int');
+	    $viewableIdSites = APISitesManager::getInstance()->getSitesIdWithAtLeastViewAccess();
+	    $defaultIdSite   = reset($viewableIdSites);
+	    $view->idSite    = Common::getRequestVar('idSite', $defaultIdSite, 'int');
 
-        $view->period = Common::getRequestVar('period', 'day', 'string');
-        $view->date = Common::getRequestVar('date', 'yesterday', 'string');
-        $view->server_vars = array(
-            'protocol' => ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || $_SERVER['SERVER_PORT'] == 443) ? 'https://' : 'http://',
-            'server_name' => Common::sanitizeInputValue($_SERVER['SERVER_NAME']),
-            'php_self' => Common::sanitizeInputValue($_SERVER['PHP_SELF'])
-        );
+	    $view->period      = Common::getRequestVar('period', 'day', 'string');
+	    $view->date        = Common::getRequestVar('date', 'yesterday', 'string');
+	    $view->server_vars = array(
+		    'protocol'    => ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || $_SERVER['SERVER_PORT'] == 443) ? 'https://' : 'http://',
+		    'server_name' => Common::sanitizeInputValue($_SERVER['SERVER_NAME']),
+		    'php_self'    => Common::sanitizeInputValue($_SERVER['PHP_SELF'])
+	    );
 
         return $view->render();
     }
 
+	/**
+	 * Method to unpublish one or more records.
+	 *
+	 * @return   mixed|void
+	 * @throws   \Exception
+	 */
     public function unpublish()
     {
         $this->publish(0);
@@ -142,7 +152,7 @@ class Controller extends Plugin\Controller
      * Remove counter(s) from DB and clear the image cache.
      *
      * @return   mixed|void
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function remove()
     {
@@ -185,6 +195,12 @@ class Controller extends Plugin\Controller
         $this->redirectToIndex('Counter', 'index');
     }
 
+	/**
+	 * Remove items from cache.
+	 *
+	 * @return   mixed|void
+	 * @throws   \Exception
+	 */
     public function clearCache()
     {
         $nonce = Common::getRequestVar('c_nonce', null, 'string');
@@ -211,11 +227,25 @@ class Controller extends Plugin\Controller
         $this->redirectToIndex('Counter', 'index');
     }
 
+	/**
+	 * Display 'Add' template.
+	 *
+	 * @return  mixed|void
+	 * @throws  \Exception
+	 */
     public function create()
     {
         return $this->edit('add');
     }
 
+	/**
+	 * Display 'Edit' template.
+	 *
+	 * @param   string  $tpl  Template filename.
+	 *
+	 * @return  mixed|void
+	 * @throws  \Exception
+	 */
     public function edit($tpl = 'edit')
     {
         $this->api->checkAccess();
@@ -240,11 +270,25 @@ class Controller extends Plugin\Controller
         return $view->render();
     }
 
+	/**
+	 * Save task.
+	 *
+	 * @return  void
+	 * @throws  \Exception
+	 */
     public function save()
     {
         $this->apply('save');
     }
 
+	/**
+	 * Apply task.
+	 *
+	 * @param   string  $task  Task name.
+	 *
+	 * @return  mixed|void
+	 * @throws  \Exception
+	 */
     public function apply($task = 'apply')
     {
         $nonce = Common::getRequestVar('nonce', null, 'string');
@@ -275,16 +319,34 @@ class Controller extends Plugin\Controller
         }
     }
 
+	/**
+	 * Preview counter image while editing.
+	 *
+	 * @return  void
+	 * @throws  \Exception
+	 */
     public function preview()
     {
         $this->api->previewImage();
     }
 
+	/**
+	 * Display counter image while editing.
+	 *
+	 * @return  void
+	 * @throws  \Exception
+	 */
     public function show()
     {
         $this->api->showImage();
     }
 
+	/**
+	 * Method to display live visitors count.
+	 *
+	 * @return  void
+	 * @throws  \Exception
+	 */
     public function live()
     {
         $this->api->getLiveVisitorsCount();

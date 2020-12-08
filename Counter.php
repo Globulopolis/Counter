@@ -9,7 +9,6 @@
 
 namespace Piwik\Plugins\Counter;
 
-use Exception;
 use Piwik\Common;
 use Piwik\Db;
 use Piwik\Plugin;
@@ -43,7 +42,7 @@ class Counter extends Plugin
     /**
      * Executed every time the plugin is enabled.
      *
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function activate()
     {
@@ -53,7 +52,7 @@ class Counter extends Plugin
     /**
      * Installs the plugin.
      *
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function install()
     {
@@ -69,10 +68,10 @@ class Counter extends Plugin
                 . " PRIMARY KEY (id),"
                 . " KEY idx_idsite (idsite),"
                 . " KEY idx_state (published)"
-                . " ) ENGINE=MYISAM DEFAULT CHARSET=utf8";
+                . " ) ENGINE=MYISAM DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci";
 
             Db::exec($query);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             if (!Db::get()->isErrNo($e, '1050')) {
                 throw $e;
             }

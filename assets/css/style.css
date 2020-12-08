@@ -14,11 +14,6 @@
     margin-bottom: .3em;
 }
 
-.c-footer a#c_check {
-    background: url("../../../../plugins/Morpheus/images/reload.png") no-repeat left center;
-    padding-left: 20px;
-}
-
 .addRowCounter a {
     font-size: 1em;
     font-weight: bold;
@@ -30,6 +25,12 @@
 }
 .input-red {
     background: url("../images/icons/publish_n.png") no-repeat 99% 50% !important;
+}
+
+.counters-list [type="checkbox"]:not(:checked), .counters-list [type="checkbox"]:checked {
+    position: relative !important;
+    opacity: 100 !important;
+    pointer-events: all !important;
 }
 
 .check-state {

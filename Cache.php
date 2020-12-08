@@ -12,7 +12,7 @@ namespace Piwik\Plugins\Counter;
 /**
  * Plugin cache class.
  */
-class CounterCache
+class Cache
 {
     protected $options = array(
         'cacheDir'         => '',
@@ -66,7 +66,7 @@ class CounterCache
             )
         );
 
-        $result = file_put_contents($metaFile, $metaInfo);
+        file_put_contents($metaFile, $metaInfo);
 
         ob_start();
         ob_implicit_flush(false);
@@ -147,7 +147,7 @@ class CounterCache
     /**
      * Remove cache item(s).
      *
-     * @param   mixed  $id  Cache ID or array of IDs.
+     * @param   string  $id  Cache ID.
      *
      * @return  boolean
      */
@@ -155,28 +155,18 @@ class CounterCache
     {
         clearstatcache();
 
-        if (is_array($id))
-        {
-            foreach ($id as $value)
-            {
-                if (!is_file($this->options['cacheDir'] . $value)) {
-                    return false;
-                }
+        $cacheId = !empty($this->options['cacheId']) ? $this->options['cacheId'] : $id;
 
-                if (!@unlink($this->options['cacheDir'] . $value)) {
-                    return false;
-                }
-            }
-        }
-        else {
-            if (!is_file($this->options['cacheDir'] . $this->options['cacheId'])) {
-                return false;
-            }
+	    if (!is_file($this->options['cacheDir'] . $cacheId)) {
+		    return false;
+	    }
 
-            if (!@unlink($this->options['cacheDir'] . $this->options['cacheId'])) {
-                return false;
-            }
-        }
+	    if (!@unlink($this->options['cacheDir'] . $cacheId)) {
+		    return false;
+	    }
+
+	    // Remove meta file.
+	    @unlink($this->options['cacheDir'] . $cacheId . '.meta');
 
         return true;
     }

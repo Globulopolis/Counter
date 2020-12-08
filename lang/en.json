@@ -53,14 +53,14 @@
     "Params_padd_left": "from left",
     "Params_padd_top": " from above",
     "Params_img_path": "Image filepath",
-    "Params_img_path_desc": "Path to the image. Absolute path or relative to Piwik root folder. The only supported types png and gif",
+    "Params_img_path_desc": "Absolute path to the image. The only supported types png and gif",
     "Params_datestart": "Start date",
     "Params_datestart_period": "or period",
     "Params_datestart_desc": "Date from which will start counting visits. To compute all visits set the date when piwik was installed or date when site was added. Format - year-month-day<br />For example - 2000-01-01<br />If both fields are left blank, the date will be taken from the parameter <strong>date</strong> in the url.",
     "Params_token_auth": "User token",
     "Params_token_auth_desc": "The token of a user with view (preview) rights. If you do not specify, then piwik report an error, and the counter will be zero. You can also create additional users and assign the appropriate rights.",
     "Params_fontpath": "Font filepath",
-    "Params_fontpath_desc": "Font filepath for font in TrueType format. Absolute path or relative to Piwik root folder.",
+    "Params_fontpath_desc": "Absolute path to a font file in TrueType format.",
     "Params_fontsize": "Font size",
     "Params_fontsize_desc": "Font size - 7pt. For GD1 - 7px",
     "Params_pos_sep": "Configuration labels",
@@ -79,7 +79,7 @@
     "Params_cache_clear_button": "Clear",
     "Params_cache_time": "Cache lifetime",
     "Params_cache_time_desc": "When a period is selected from the list below, the cache is not less than the minimum value.",
-    "Path_empty": "Path is empty or is invalid!",
+    "Path_empty": "The path is empty or not found!",
     "Apply": "Apply",
     "Preview": "Preview",
     "Preview_notice": "To create a new image, it may take some time.",
@@ -98,10 +98,6 @@
     "Params_live_elemid": "Element ID on the page",
     "Params_live_elemid_desc": "Example:<br />\"Visitors: &lt;span id=\"element_id\"&gt;&lt;/span&gt;\"",
     "Footer_found_err": "Found a bug in the plugin?",
-    "Footer_found_err_url": "http://киноархив.com/en/contact-form.html",
-    "Footer_ver_inst": "Installed version: ",
-    "Footer_ver_remote": "Version available: ",
-    "Footer_help_translate": "Need help with translation",
-    "Footer_help_translate_url": "http://киноархив.com/en/others/piwik/10-piwik-graphical-counter.html#translations"
+    "Footer_found_err_url": "http://киноархив.com/en/contact-form.html"
   }
 }

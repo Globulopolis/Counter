@@ -19,14 +19,15 @@ class Updates_2_0_13 extends Updates
 	{
 		$rows = Db::fetchAll("SELECT id, params FROM " . Common::prefixTable('counter_sites'));
 
-		foreach ($rows as $row) {
-			$params = json_decode($row['params'], true);
+		foreach ($rows as $row)
+		{
+			$params                   = json_decode($row['params'], true);
 			$params['format_numbers'] = 0;
 
-            $bind = array(json_encode($params), $row['id']);
-            $query = sprintf('UPDATE %s SET params = ? WHERE id = ?', Common::prefixTable('counter_sites'));
+			$bind  = array(json_encode($params), $row['id']);
+			$query = sprintf('UPDATE %s SET params = ? WHERE id = ?', Common::prefixTable('counter_sites'));
 
-            Db::query($query, $bind);
+			Db::query($query, $bind);
 		}
 	}
 }

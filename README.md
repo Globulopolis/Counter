@@ -9,6 +9,9 @@ Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text v
 See http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
 
 ## Changelog
+3.0.0
+* New plugin version for Matomo 4.
+
 2.1.3
 * Minor fixes.
 
@@ -73,7 +76,7 @@ See http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
 * Added custom template for 'visitors by countries'. NB! 'Live visitors counter' works only if custom template field for 'Visitors by countries' is empty.
 * Fixed an error w/ undefined method Access::isSuperUser
 * Fix for double slash in ajax url
-* Added workaround for getallheaders() method if PHP running as CGI.
+* The added workaround for getallheaders() method if PHP running as CGI.
 * Remove PIWIK_ENABLE_DISPATCH due to triggering an error while generating counter image.
 
 2.0.2
