@@ -23,7 +23,7 @@
                 var elem = $(this);
                 elem.removeClass('input-green input-red');
 
-                if (elem.val() != '') {
+                if (elem.val() !== '') {
                     $.post('index.php?module=API&method=Counter.checkPath&format=JSON', {'path': elem.val()}, function (response) {
                         if (response.value) {
                             elem.addClass('input-green');
@@ -49,7 +49,7 @@
             $('#idsite').change(function () {
                 var _this = $(this);
 
-                if (this.value != 0) {
+                if (this.value !== 0) {
                     _this.attr('disabled', true);
 
                     $.ajax({
@@ -88,16 +88,16 @@
                 }
             });
             $('#start_date_period').change(function () {
-                if ($('option', this).filter(':selected').val() != 'none') {
+                if ($('option', this).filter(':selected').val() !== 'none') {
                     $('#start_date').val('');
-                    if ($('option', this).filter(':selected').val() == 'day') {
+                    if ($('option', this).filter(':selected').val() === 'day') {
                         $('#cache_time').val('86400');
                     }
                 }
             }).trigger('change');
 
             $('#cache_time').blur(function () {
-                if ($('#start_date_period option:selected').val() != 'none' && $(this).val() > 86400) {
+                if ($('#start_date_period option:selected').val() !== 'none' && $(this).val() > 86400) {
                     $(this).val('86400');
                 }
             });
@@ -308,7 +308,7 @@
 
             <div class="form-group row">
                 <div class="input-field col s12 m6">
-                    <input type="text" name="img_path" value="plugins/Counter/assets/images/counter.png" id="img_path"
+                    <input type="text" name="img_path" value="{{ data.item.params.img_path }}" id="img_path"
                            class="paths" size="70"/>
                     <span>&nbsp;</span>
                     <label for="img_path">{{ 'Counter_Params_img_path'|translate }}</label>
@@ -320,7 +320,7 @@
 
             <div class="form-group row">
                 <div class="input-field col s12 m6">
-                    <input type="text" name="font_path" value="plugins/Counter/assets/fonts/OpenSans-Regular.ttf"
+                    <input type="text" name="font_path" value="{{ data.item.params.font_path }}"
                            id="font_path" class="paths" size="70"/>
                     <span>&nbsp;</span>
                     <label for="font_path">{{ 'Counter_Params_fontpath'|translate }}</label>

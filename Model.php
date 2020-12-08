@@ -9,7 +9,6 @@
 
 namespace Piwik\Plugins\Counter;
 
-use Exception;
 use Piwik\Access;
 use Piwik\Common;
 use Piwik\Db;
@@ -39,7 +38,7 @@ class Model
      * @param    boolean  $encode  Encode 'params' array into JSON string.
      *
      * @return   array
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function getForm($encode = false)
     {
@@ -50,6 +49,8 @@ class Model
         if (empty($start_date) && empty($start_date_period)) {
             $start_date_period = 'none';
         }
+
+        $pluginRoot = PIWIK_DOCUMENT_ROOT . '/plugins/Counter/';
 
         $data = array(
             'id'        => Common::getRequestVar('id', 0, 'int'),
@@ -70,8 +71,8 @@ class Model
                 'sitename_font_size'       => Common::getRequestVar('sitename_font_size', 7, 'int'),
                 'visits_font_size'         => Common::getRequestVar('visits_font_size', 7, 'int'),
                 'hits_font_size'           => Common::getRequestVar('hits_font_size', 7, 'int'),
-                'img_path'                 => $this->cleanPath(Common::getRequestVar('img_path', '', 'string')),
-                'font_path'                => $this->cleanPath(Common::getRequestVar('font_path', '', 'string')),
+                'img_path'                 => $this->cleanPath(Common::getRequestVar('img_path', $pluginRoot . 'assets/images/counter.png', 'string')),
+                'font_path'                => $this->cleanPath(Common::getRequestVar('font_path', $pluginRoot . 'assets/fonts/OpenSans-Regular.ttf', 'string')),
                 'cache'                    => Common::getRequestVar('cache', 1, 'int'),
                 'cache_time'               => Common::getRequestVar('cache_time', 900, 'int'),
                 'start_date'               => $start_date,
@@ -106,7 +107,7 @@ class Model
      * @param    boolean  $return_id  Return only primary keys of counters.
      *
      * @return   array
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function getItems($return_id = false)
     {
@@ -144,14 +145,14 @@ class Model
      *
      * @return  array
      *
-     * @throws  Exception
+     * @throws  \Exception
      */
     public function getItem($id)
     {
         $result = array();
 
         if (!isset($id[0])) {
-            throw new Exception(Piwik::translate('Counter_Error_has_occurred'));
+            throw new \Exception(Piwik::translate('Counter_Error_has_occurred'));
         }
 
         $row = Db::fetchRow("SELECT id, idsite, title, params, visits, views, published FROM " . $this->table . " WHERE id = " . (int)$id[0]);
@@ -164,6 +165,14 @@ class Model
         $result['visits']                     = $row['visits'];
         $result['views']                      = $row['views'];
         $result['published']                  = $row['published'];
+
+	    if (empty($result['params']['img_path'])) {
+		    $result['params']['img_path'] = $this->cleanPath(PIWIK_DOCUMENT_ROOT . '/plugins/Counter/assets/images/counter.png');
+	    }
+
+	    if (empty($result['params']['font_path'])) {
+		    $result['params']['font_path'] = $this->cleanPath(PIWIK_DOCUMENT_ROOT . '/plugins/Counter/assets/fonts/OpenSans-Regular.ttf');
+	    }
 
         // Get the proper token if it's not set by default
         if (empty($result['params']['token'])) {
@@ -200,15 +209,13 @@ class Model
      * Get the list of all sites.
      *
      * @return   array
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function getSitesList()
     {
-        $result = Db::fetchAll("SELECT idsite, name"
+        return Db::fetchAll("SELECT idsite, name"
             . "\n FROM " . Common::prefixTable('site')
             . "\n ORDER BY idsite");
-
-        return $result;
     }
 
     /**
@@ -217,7 +224,7 @@ class Model
      * @param    integer   $idsite  Site ID.
      *
      * @return   boolean   True if counter exists for $idsite, false otherwise.
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function counterExists($idsite)
     {
@@ -237,7 +244,7 @@ class Model
      * @param    boolean  $state  Action state
      *
      * @return   boolean  True on success.
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function publish($ids, $state)
     {
@@ -247,7 +254,7 @@ class Model
             Db::query("UPDATE " . $this->table
                 . "\n SET published = '" . (int)$state . "'"
                 . "\n WHERE id IN (" . implode(',', $ids) . ") ");
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return false;
         }
 
@@ -260,7 +267,7 @@ class Model
      * @param    array  $data  The form data.
      *
      * @return   boolean  True on success.
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function save($data)
     {
@@ -290,7 +297,7 @@ class Model
             } else {
                 return $data['id'];
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return false;
         }
     }
@@ -302,7 +309,7 @@ class Model
         try {
             Db::query("DELETE FROM " . $this->table
                 . "\n WHERE id IN (" . implode(',', $ids) . ")");
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return false;
         }
 

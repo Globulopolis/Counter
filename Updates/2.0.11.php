@@ -15,18 +15,18 @@ use Piwik\Updates;
 
 class Updates_2_0_11 extends Updates
 {
-    static function getSql()
-    {
-        return array(
-            "ALTER TABLE `" . Common::prefixTable('counter_sites') . "` ADD COLUMN `visits` INT (11) DEFAULT 0 NOT NULL AFTER `params`" => 1060,
-            "ALTER TABLE `" . Common::prefixTable('counter_sites') . "` ADD COLUMN `views` INT (11) DEFAULT 0 NOT NULL AFTER `visits`" => 1060,
-            "ALTER TABLE `" . Common::prefixTable('counter_sites') . "` ADD INDEX `idx_idsite` (`idsite`)" => 1060,
-            "ALTER TABLE `" . Common::prefixTable('counter_sites') . "` ADD INDEX `idx_state` (`published`)" => 1060
-        );
-    }
+	static function getSql()
+	{
+		return array(
+			"ALTER TABLE `" . Common::prefixTable('counter_sites') . "` ADD COLUMN `visits` INT (11) DEFAULT 0 NOT NULL AFTER `params`" => 1060,
+			"ALTER TABLE `" . Common::prefixTable('counter_sites') . "` ADD COLUMN `views` INT (11) DEFAULT 0 NOT NULL AFTER `visits`"  => 1060,
+			"ALTER TABLE `" . Common::prefixTable('counter_sites') . "` ADD INDEX `idx_idsite` (`idsite`)"                              => 1060,
+			"ALTER TABLE `" . Common::prefixTable('counter_sites') . "` ADD INDEX `idx_state` (`published`)"                            => 1060
+		);
+	}
 
-    static function update()
-    {
-        Updater::updateDatabase(__FILE__, self::getSql());
-    }
+	static function update()
+	{
+		Updater::updateDatabase(__FILE__, self::getSql());
+	}
 }

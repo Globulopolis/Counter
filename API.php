@@ -9,7 +9,6 @@
 
 namespace Piwik\Plugins\Counter;
 
-use Exception;
 use Piwik\Access;
 use Piwik\API\Request;
 use Piwik\Common;
@@ -24,23 +23,22 @@ use Piwik\Plugins\SitesManager\API as SitesManager;
  */
 class API extends \Piwik\Plugin\API
 {
-    /**
-     * Method to get a list of counters.
-     *
-     * @return  array
-     */
+	/**
+	 * Method to get a list of counters.
+	 *
+	 * @return  array
+	 * @throws  \Exception
+	 */
     public function getItems()
     {
-        $result = $this->getModel()->getItems();
-
-        return $result;
+        return $this->getModel()->getItems();
     }
 
     /**
      * Method to get a counter data.
      *
      * @return   mixed       Array on success, false otherwise
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function getItem()
     {
@@ -56,34 +54,31 @@ class API extends \Piwik\Plugin\API
 
         $this->checkAccess();
 
-        $result = $this->getModel()->getItem($id);
-
-        return $result;
+        return $this->getModel()->getItem($id);
     }
 
-    /**
-     * Method to check if counter exists for that site
-     *
-     * @param   integer  $idsite  Site ID
-     *
-     * @return  string
-     */
+	/**
+	 * Method to check if counter exists for that site
+	 *
+	 * @param   integer  $idsite  Site ID
+	 *
+	 * @return  string|boolean
+	 * @throws  \Exception
+	 */
     public function counterExists($idsite)
     {
         if (empty($idsite)) {
             return false;
         }
 
-        $result = $this->getModel()->counterExists($idsite);
-
-        return $result;
+        return $this->getModel()->counterExists($idsite);
     }
 
     /**
      * Method to check if file exists.
      *
      * @return   string
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function checkPath()
     {
@@ -111,7 +106,7 @@ class API extends \Piwik\Plugin\API
      * @param    integer  $priority  Priority. See PRIORITY_* in core/Notification.php fot valid message priorities.
      *
      * @return   void
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function enqueueMessage($message, $style = 'info', $type = 'transient', $priority = 0)
     {
@@ -167,7 +162,7 @@ class API extends \Piwik\Plugin\API
      * @param   boolean  $is_index  True if counter data requested from frontpage
      *
      * @return  boolean
-     * @throws  Exception
+     * @throws  \Exception
      */
     public function checkAccess($is_index = false)
     {
@@ -182,7 +177,7 @@ class API extends \Piwik\Plugin\API
 
         // Checking the user access rights. If the user not an admin for at least one site when throw an error
         if (count($sites_ids) <= 0) {
-            throw new Exception(Piwik::translate('General_ExceptionPrivilegeAtLeastOneWebsite', array('admin')));
+            throw new \Exception(Piwik::translate('General_ExceptionPrivilegeAtLeastOneWebsite', array('admin')));
         } else {
             // Don't perfom checking for index
             if ($is_index === false) {
@@ -206,7 +201,7 @@ class API extends \Piwik\Plugin\API
                     if (count($result) > 0) {
                         return true;
                     } else {
-                        throw new Exception(Piwik::translate('General_ExceptionPrivilegeAtLeastOneWebsite', array('admin')));
+                        throw new \Exception(Piwik::translate('General_ExceptionPrivilegeAtLeastOneWebsite', array('admin')));
                     }
                 } else {
                     return true;
@@ -223,7 +218,7 @@ class API extends \Piwik\Plugin\API
      * @param    array  $params  An array with the counter data.
      *
      * @return   mixed
-     * @throws   Exception
+     * @throws   \Exception
      */
     private function createImage($params = array())
     {
@@ -260,8 +255,9 @@ class API extends \Piwik\Plugin\API
             $date = $_date;
         }
 
-        $request = new Request('method=VisitsSummary.get&idSite=' . (int)$params['idsite'] . '&period=range&date=' . $date . ',' . date('Y-m-d') . '&format=php&serialize=0&token_auth=' . $params['params']['token']);
+        $request = new Request('method=VisitsSummary.get&idSite=' . (int)$params['idsite'] . '&period=range&date=' . $date . ',' . date('Y-m-d') . '&format=json&&filter_limit=-1&token_auth=' . $params['params']['token']);
         $result = $request->process();
+	    $result = json_decode($result,true);
 
         $visits = 0;
         $views = 0;
@@ -308,7 +304,7 @@ class API extends \Piwik\Plugin\API
             $data = array($visits, $views);
         }
 
-        if (!empty($params['params']['img_path']) && file_exists($params['params']['img_path'])) {
+        if (!empty($params['params']['img_path']) && is_file($params['params']['img_path'])) {
             header_remove('X-Powered-By');
 
             $mime = $this->getMime($params['params']['img_path']);
@@ -336,7 +332,7 @@ class API extends \Piwik\Plugin\API
             }
 
             list($w, $h) = getimagesize($params['params']['img_path']);
-            if (!empty($params['params']['font_path']) && file_exists($params['params']['font_path'])) {
+            if (!empty($params['params']['font_path']) && is_file($params['params']['font_path'])) {
                 // Draw sitename
                 if (!empty($params['title']) && $params['params']['show_sitename'] == 1) {
                     $rgb_arr_sitename = $this->rgb2array($params['params']['color_sitename']);
@@ -400,7 +396,7 @@ class API extends \Piwik\Plugin\API
      * Show image from cache or create if it not exists
      *
      * @return   void
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function showImage()
     {
@@ -424,7 +420,7 @@ class API extends \Piwik\Plugin\API
         if ($params['params']['cache'] == 1) {
             require_once __DIR__ . '/Cache.php';
 
-            $cache = new CounterCache(
+            $cache = new Cache(
                 array(
                     'cacheDir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT . '/tmp/cache/'),
                     'cacheId'  => $cacheId
@@ -456,7 +452,7 @@ class API extends \Piwik\Plugin\API
      * Create image for preview while editing counter data. For backend only. This method do not use cache.
      *
      * @return   void
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function previewImage()
     {
@@ -466,10 +462,10 @@ class API extends \Piwik\Plugin\API
     }
 
     /**
-     * Method to get live visitors count
+     * Method to get live visitors count.
      *
      * @return   void
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function getLiveVisitorsCount()
     {
@@ -654,7 +650,7 @@ class API extends \Piwik\Plugin\API
      * @param    array  $ids  A list of the primary keys.
      *
      * @return   boolean  True on success.
-     * @throws   Exception
+     * @throws   \Exception
      */
     public function clearCache($ids)
     {
@@ -669,7 +665,7 @@ class API extends \Piwik\Plugin\API
         require_once __DIR__ . '/Cache.php';
 
         $errors = array();
-        $cache = new CounterCache(
+        $cache  = new Cache(
             array(
                 'cacheDir' => $this->getModel()->cleanPath(PIWIK_DOCUMENT_ROOT . '/tmp/cache/')
             )
@@ -709,7 +705,7 @@ class API extends \Piwik\Plugin\API
      */
     private function getMime($path)
     {
-        if (!empty($path) && file_exists($path)) {
+        if (!empty($path) && is_file($path)) {
             if (function_exists('finfo_open')) {
                 $finfo = finfo_open(FILEINFO_MIME_TYPE);
                 $mime = finfo_file($finfo, $path);

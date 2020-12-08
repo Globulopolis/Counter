@@ -3,6 +3,9 @@
 
     <script type="text/javascript">
         jQuery(document).ready(function ($) {
+            var UI = require('piwik/UI');
+            var notification = new UI.Notification();
+
             $('#checkAll').change(function () {
                 $('input:checkbox').prop('checked', $(this).prop('checked'));
             });
@@ -21,11 +24,11 @@
 
                 if ($this.hasClass('publish')) {
                     $('input[name="action"]').val('publish');
-                    $('#countersForm').submit();
                 } else if ($this.hasClass('unpublish')) {
                     $('input[name="action"]').val('unpublish');
-                    $('#countersForm').submit();
                 }
+
+                $('#countersForm').submit();
             });
 
             $('.hasTooltip').tooltip({track: true, show: false, hide: false});
@@ -37,30 +40,25 @@
                     task  = $this.data('task'),
                     dlg   = $('#dialog_remove');
 
-                if (task == 'create') {
+                if (task === 'create') {
                     document.location.href = 'index.php?module=Counter&action=create&idSite={{ idSite }}&period={{ period }}&date={{ date }}';
                 } else {
-                    if ($('.item-checkbox').filter(':checked').length == 0) {
-                        $('.addRowCounter').aurora({
-                            text: '{{ 'Counter_List_make_selection'|translate }}',
-                            leave_only_first: true,
-                            container: 'ui-state-error',
-                            icon: 'ui-icon-alert',
-                            placement: 'after',
-                            button: 'close',
-                            button_title: '[{{ 'General_Close'|translate }}]'
-                        });
+                    if ($('.item-checkbox').filter(':checked').length === 0) {
+                        notification.show(
+                            '{{ 'Counter_List_make_selection'|translate }}',
+                            {context: 'warning', type: 'toast', placeat: '.addRowCounter'}
+                        );
 
                         return false;
                     }
 
-                    if (task == 'publish') {
+                    if (task === 'publish') {
                         $('input[name="action"]').val('publish');
                         $('#countersForm').submit();
-                    } else if (task == 'unpublish') {
+                    } else if (task === 'unpublish') {
                         $('input[name="action"]').val('unpublish');
                         $('#countersForm').submit();
-                    } else if (task == 'remove') {
+                    } else if (task === 'remove') {
                         dlg.dialog({
                             buttons: {
                                 '{{ 'General_Delete'|translate }}': function () {
@@ -77,7 +75,7 @@
                             height: 150,
                             width: 420
                         });
-                    } else if (task == 'clearcache') {
+                    } else if (task === 'clearcache') {
                         $('input[name="action"]').val('clearCache');
                         $('#countersForm').submit();
                     }
@@ -99,14 +97,12 @@
             </div>
             <br/>
 
-            <table width="100%" border="0" class="entityTable dataTable">
+            <table width="100%" class="entityTable dataTable">
                 <thead>
                 <tr>
                     <th width="1%">
-                        <div class="checkbox ng-scope">
-                            <input type="checkbox" name="checkall-toggle" id="checkAll" class="ng-valid ng-dirty ng-valid-parse ng-touched"/>
-                            <label for="checkAll" class="ng-binding"></label>
-                        </div>
+                        <input type="checkbox" name="checkall-toggle" id="checkAll" />
+                        <label for="checkAll"></label>
                     </th>
                     <th>{{ 'Counter_Sitename'|translate }}</th>
                     <th width="5%">&nbsp;</th>
@@ -124,10 +120,8 @@
                     {% for data in counters %}
                         <tr>
                             <td>
-                                <div class="checkbox ng-scope">
-                                    <input type="checkbox" id="id_{{ data.id }}" name="id[]" class="ng-valid ng-dirty ng-valid-parse ng-touched item-checkbox" value="{{ data.id }}">
-                                    <label for="id_{{ data.id }}" class="ng-binding"></label>
-                                </div>
+                                <input type="checkbox" id="id_{{ data.id }}" name="id[]" value="{{ data.id }}" class="item-checkbox"/>
+                                <label for="id_{{ data.id }}"></label>
                             </td>
                             <td>
                                 <strong><a href="index.php?module=Counter&action=edit&id={{ data.id }}&idSite={{ idSite }}&period={{ period }}&date={{ date }}">{% if data.title == '' %}{{ 'Counter_Sitename_nositename'|translate }}{% else %}{{ data.title }}{% endif %}</a></strong>

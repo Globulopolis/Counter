@@ -23,7 +23,7 @@
                 var elem = $(this);
                 elem.removeClass('input-green input-red');
 
-                if (elem.val() != '') {
+                if (elem.val() !== '') {
                     $.post('index.php?module=API&method=Counter.checkPath&format=JSON', {'path': elem.val()}, function (response) {
                         if (response.value) {
                             elem.addClass('input-green');
@@ -50,7 +50,7 @@
                 var _this = $(this);
                 $('span.check-state').aurora.destroy({indexes: 'all'});
 
-                if (this.value != 0 && this.value != {{ data.item.idsite }}) {
+                if (this.value !== 0 && this.value !== {{ data.item.idsite }}) {
                     _this.attr('disabled', true);
 
                     $.ajax({
@@ -89,16 +89,16 @@
                 }
             });
             $('#start_date_period').change(function () {
-                if ($('option', this).filter(':selected').val() != 'none') {
+                if ($('option', this).filter(':selected').val() !== 'none') {
                     $('#start_date').val('');
-                    if ($('option', this).filter(':selected').val() == 'day') {
+                    if ($('option', this).filter(':selected').val() === 'day') {
                         $('#cache_time').val('86400');
                     }
                 }
             }).trigger('change');
 
             $('#cache_time').blur(function () {
-                if ($('#start_date_period option:selected').val() != 'none' && $(this).val() > 86400) {
+                if ($('#start_date_period option:selected').val() !== 'none' && $(this).val() > 86400) {
                     $(this).val('86400');
                 }
             });
@@ -116,7 +116,7 @@
                 var date = '',
                     form_data = $('form#adminForm').serialize();
 
-                if ($('#start_date').val() == '' && $('#start_date_period option').filter(':selected').val() == 'none') {
+                if ($('#start_date').val() === '' && $('#start_date_period option').filter(':selected').val() === 'none') {
                     date = '&date=day';
                 }
 
