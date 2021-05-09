@@ -9,6 +9,12 @@ Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text v
 See http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
 
 ## Changelog
+3.0.2
+* Use force_ssl option for live visitors counter javascript file.
+
+3.0.1
+* Bump version.
+
 3.0.0
 * New plugin version for Matomo 4.
 
