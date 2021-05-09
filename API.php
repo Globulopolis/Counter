@@ -12,6 +12,7 @@ namespace Piwik\Plugins\Counter;
 use Piwik\Access;
 use Piwik\API\Request;
 use Piwik\Common;
+use Piwik\Config;
 use Piwik\Db;
 use Piwik\Notification;
 use Piwik\Piwik;
@@ -255,7 +256,7 @@ class API extends \Piwik\Plugin\API
             $date = $_date;
         }
 
-        $request = new Request('method=VisitsSummary.get&idSite=' . (int)$params['idsite'] . '&period=range&date=' . $date . ',' . date('Y-m-d') . '&format=json&&filter_limit=-1&token_auth=' . $params['params']['token']);
+        $request = new Request('method=VisitsSummary.get&idSite=' . (int) $params['idsite'] . '&period=range&date=' . $date . ',' . date('Y-m-d') . '&format=json&&filter_limit=-1&token_auth=' . $params['params']['token']);
         $result = $request->process();
 	    $result = json_decode($result,true);
 
@@ -482,7 +483,7 @@ class API extends \Piwik\Plugin\API
                 $dom_elem_id = $params['params']['livestat_elem_id'];
             }
 
-            $data_ajax_url = (array_key_exists('HTTPS', $_SERVER) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?module=Counter&action=live&id=' . $id;
+            $data_ajax_url = (Config::getInstance()->General['force_ssl'] === 1 ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?module=Counter&action=live&id=' . $id;
 
             header('Content-type: text/javascript');
 
