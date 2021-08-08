@@ -155,7 +155,7 @@ class Model
             throw new \Exception(Piwik::translate('Counter_Error_has_occurred'));
         }
 
-        $row = Db::fetchRow("SELECT id, idsite, title, params, visits, views, published FROM " . $this->table . " WHERE id = " . (int)$id[0]);
+        $row = Db::fetchRow("SELECT id, idsite, title, params, visits, views, published FROM " . $this->table . " WHERE id = " . (int) $id[0]);
 
         $result['id']                         = $row['id'];
         $result['idsite']                     = $row['idsite'];
@@ -184,7 +184,7 @@ class Model
         $rows = Db::fetchAll("SELECT s.main_url, u.url"
             . "\n FROM " . Common::prefixTable('site') . " AS s"
             . "\n LEFT JOIN " . Common::prefixTable('site_url') . " AS u ON s.idsite = u.idsite"
-            . "\n WHERE s.idsite = " . (int)$row['idsite']);
+            . "\n WHERE s.idsite = " . (int) $row['idsite']);
 
         $origins = array();
         $p = array('/http:\/\//', '/https:\/\//');

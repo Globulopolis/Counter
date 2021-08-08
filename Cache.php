@@ -112,7 +112,7 @@ class Cache
     }
 
     /**
-     * Save some string datas into a cache record.
+     * Save some string data into a cache record.
      *
      * @param   mixed  $data  Cache data.
      *

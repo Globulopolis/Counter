@@ -187,6 +187,7 @@ class API extends \Piwik\Plugin\API
                 }
 
                 $ids = Common::getRequestVar('id', array(), 'array');
+	            $ids = $this->toInteger($ids);
 
                 if (empty($ids) && $action == 'counter_exists') {
                     return true;
@@ -784,5 +785,33 @@ class API extends \Piwik\Plugin\API
     private function getModel()
     {
         return new Model();
+    }
+
+    /**
+     * Convert array to integer values.
+     *
+     * @param   array      $array    The source array to convert
+     * @param   int|array  $default  A default value to assign if $array is not an array
+     *
+     * @return  array
+     */
+    public function toInteger($array, $default = null)
+    {
+        if (is_array($array))
+        {
+            return array_map('intval', $array);
+        }
+
+        if ($default === null)
+        {
+            return array();
+        }
+
+        if (is_array($default))
+        {
+            return static::toInteger($default);
+        }
+
+        return array((int) $default);
     }
 }

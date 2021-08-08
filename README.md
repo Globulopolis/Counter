@@ -9,6 +9,9 @@ Display Hits/Visits on image. Display Hits/Visits/from Countries stats as text v
 See http://xn--80aeqbhthr9b.com/en/others/piwik/10-piwik-graphical-counter.html
 
 ## Changelog
+3.0.3
+* Fixed some security issues.
+
 3.0.2
 * Use force_ssl option for live visitors counter javascript file.
 

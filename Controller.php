@@ -114,6 +114,7 @@ class Controller extends Plugin\Controller
         $this->api->checkAccess();
 
         $ids = Common::getRequestVar('id', array(), 'array');
+        $ids = $this->api->toInteger($ids);
 
         if (empty($ids)) {
             $this->api->enqueueMessage($this->translator->translate('Counter_List_make_selection'), 'error');
@@ -168,6 +169,7 @@ class Controller extends Plugin\Controller
         $this->api->checkAccess();
 
         $ids = Common::getRequestVar('id', array(), 'array');
+        $ids = $this->api->toInteger($ids);
 
         if (empty($ids)) {
             $this->api->enqueueMessage($this->translator->translate('Counter_List_make_selection'), 'error');
@@ -209,7 +211,9 @@ class Controller extends Plugin\Controller
             throw new \Exception($this->translator->translate('General_ExceptionNonceMismatch'));
         }
 
-        $result = $this->api->clearCache(Common::getRequestVar('id', array(), 'array'));
+        $ids = Common::getRequestVar('id', array(), 'array');
+        $ids = $this->api->toInteger($ids);
+        $result = $this->api->clearCache($ids);
 
         if (strtolower(Common::getRequestVar('format', '', 'string')) === 'json') {
             Json::sendHeaderJSON();
@@ -312,7 +316,7 @@ class Controller extends Plugin\Controller
             $this->api->enqueueMessage($this->translator->translate('Counter_Saved'), 'success', 'toast');
         }
 
-        if ($task == 'apply') {
+        if ($task === 'apply') {
             $this->redirectToIndex('Counter', 'edit', null, null, null, array('id' => $result));
         } else {
             $this->redirectToIndex('Counter', 'index');
